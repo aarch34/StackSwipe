@@ -5,8 +5,8 @@ import { useAuth } from '@/hooks/use-auth';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 
-const publicRoutes = ['/login', '/signup', '/'];
-const authRoutes = ['/login', '/signup'];
+const publicRoutes = ['/', '/auth', '/login', '/signup'];
+const authRoutes = ['/auth', '/login', '/signup'];
 
 export function AppRouter({ children }: { children: React.ReactNode }) {
     const { user, loading, hasProfile } = useAuth();

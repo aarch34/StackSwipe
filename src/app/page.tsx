@@ -46,7 +46,7 @@ export default function LandingPage() {
             </p>
             <div className="mt-10 flex flex-col sm:flex-row gap-4">
                 <Button size="lg" asChild>
-                    <Link href="/signup">
+                    <Link href="/auth">
                         Get Started <ArrowRight className="ml-2 h-5 w-5" />
                     </Link>
                 </Button>
