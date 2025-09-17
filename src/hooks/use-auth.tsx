@@ -74,7 +74,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     const logout = async () => {
         await signOut(auth);
-        router.push('/login');
+        router.push('/');
     };
 
     const value = { user, loading, profile, hasProfile, matches, setMatches, updateProfile, login, signup, logout };
