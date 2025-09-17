@@ -44,7 +44,7 @@ export default function MessagesPage() {
     
         querySnapshot.forEach(doc => {
             const match = doc.data() as Match;
-            userMatches.push(match);
+            userMatches.push({ ...match, id: doc.id });
             match.userIds.forEach(id => userIdsInMatches.add(id));
         });
     
@@ -138,7 +138,7 @@ export default function MessagesPage() {
             users: [ currentUserProfile, otherUserProfile],
             messages: []
         };
-        await setDoc(convRef, { userIds: conversationData.userIds });
+        await setDoc(convRef, { userIds: conversationData.userIds, createdAt: serverTimestamp() });
     }
     
     setActiveConversation(conversationData);
@@ -270,3 +270,5 @@ export default function MessagesPage() {
     </div>
   );
 }
+
+    
