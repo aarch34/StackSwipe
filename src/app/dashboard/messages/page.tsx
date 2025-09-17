@@ -39,31 +39,18 @@ export default function MessagesPage() {
     const q = query(collection(db, "matches"), where("userIds", "array-contains", user.uid));
     
     const unsubscribeMatches = onSnapshot(q, async (querySnapshot) => {
-        const userMatches: Match[] = [];
-        const userIdsInMatches = new Set<string>();
-    
-        querySnapshot.forEach(doc => {
-            const match = doc.data() as Match;
-            userMatches.push({ ...match, id: doc.id });
-            match.userIds.forEach(id => userIdsInMatches.add(id));
+        const userMatchesPromises = querySnapshot.docs.map(async (docSnapshot) => {
+            const match = docSnapshot.data() as Omit<Match, 'id' | 'users'>;
+            
+            const userProfilesPromises = match.userIds.map(userId => getDoc(doc(db, 'users', userId)));
+            const userProfileDocs = await Promise.all(userProfilesPromises);
+            const users = userProfileDocs.map(doc => doc.data() as UserProfile).filter(Boolean);
+
+            return { ...match, id: docSnapshot.id, users };
         });
-    
-        if (userIdsInMatches.size > 0) {
-            const profilesMap = new Map<string, UserProfile>();
-            const profilesQuery = query(collection(db, "users"), where("id", "in", Array.from(userIdsInMatches)));
-            const profileSnapshots = await getDocs(profilesQuery);
-            profileSnapshots.forEach(doc => {
-                profilesMap.set(doc.id, doc.data() as UserProfile);
-            });
-    
-            const enrichedMatches = userMatches.map(match => ({
-                ...match,
-                users: match.userIds.map(id => profilesMap.get(id)).filter(Boolean) as UserProfile[]
-            }));
-            setMatches(enrichedMatches);
-        } else {
-            setMatches([]);
-        }
+        
+        const resolvedMatches = await Promise.all(userMatchesPromises);
+        setMatches(resolvedMatches);
     });
 
     return () => unsubscribeMatches();
