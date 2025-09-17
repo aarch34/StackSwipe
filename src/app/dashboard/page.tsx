@@ -235,7 +235,7 @@ export default function SwipePage() {
               {loading ? (
                 <Card className="flex flex-col items-center justify-center text-center h-full">
                     <CardHeader>
-                        <CardTitle className="font-headline text-2xl">Finding Profiles...</CardTitle>
+                        <CardTitle className="font-headline text-2xl">Pulling threads to weave your network…</CardTitle>
                     </CardHeader>
                     <CardContent className='w-full px-12'>
                        <Skeleton className="h-[450px] w-full" />
@@ -282,5 +282,3 @@ export default function SwipePage() {
     </main>
   );
 }
-
-    

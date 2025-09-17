@@ -166,7 +166,7 @@ export default function MessagesPage() {
   const otherUser = activeConversation?.users.find(u => u.id !== user?.uid);
 
   if (authLoading) {
-      return <div>Loading...</div>
+      return <div>Pulling threads to weave your network…</div>
   }
 
   return (
@@ -221,7 +221,7 @@ export default function MessagesPage() {
               <CardContent className="flex-1 p-4 overflow-hidden">
                 <ScrollArea className="h-full" ref={scrollAreaRef}>
                   <div className="space-y-4">
-                      {loadingMessages && <div className="text-center text-muted-foreground">Loading messages...</div>}
+                      {loadingMessages && <div className="text-center text-muted-foreground">Pulling threads to weave your network…</div>}
                       {!loadingMessages && messages.length === 0 && <div className="text-center text-muted-foreground">This is the beginning of your conversation. Say hi!</div>}
                       {messages.map((message) => {
                           const senderIsMe = message.senderId === user?.uid;

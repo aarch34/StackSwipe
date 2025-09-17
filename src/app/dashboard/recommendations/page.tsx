@@ -130,7 +130,7 @@ export default function RecommendationsPage() {
                                         <p className="text-xs text-muted-foreground">This is based on your current profile.</p>
                                     </div>
                                     <Button type="submit" disabled={loading} className="w-full sm:w-auto">
-                                        {loading ? 'Getting Recommendations...' : 'Get Recommendations'}
+                                        {loading ? 'Pulling threads to weave your network…' : 'Get Recommendations'}
                                     </Button>
                                 </form>
                             )}

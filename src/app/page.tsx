@@ -28,7 +28,7 @@ export default function HomePage() {
 
   return (
     <div className="flex h-screen items-center justify-center">
-      <p>Loading...</p>
+      <p>Pulling threads to weave your network…</p>
     </div>
   );
 }
