@@ -12,7 +12,7 @@ import { cn } from '@/lib/utils';
 import { type Conversation, type Message, type UserProfile, type Match } from '@/lib/data';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { useAuth } from '@/hooks/use-auth';
-import { collection, doc, onSnapshot, addDoc, serverTimestamp, query, orderBy, getDoc, setDoc, where, getDocs } from 'firebase/firestore';
+import { collection, doc, onSnapshot, addDoc, serverTimestamp, query, orderBy, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Timestamp } from 'firebase/firestore';
 
@@ -23,39 +23,12 @@ function getConversationId(userId1: string, userId2: string) {
 
 
 export default function MessagesPage() {
-  const { user, matches, setMatches, loading: authLoading } = useAuth();
+  const { user, matches, loading: authLoading } = useAuth();
   const [activeConversation, setActiveConversation] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [loadingMessages, setLoadingMessages] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!user) {
-        setMatches([]);
-        return;
-    };
-
-    const q = query(collection(db, "matches"), where("userIds", "array-contains", user.uid));
-    
-    const unsubscribeMatches = onSnapshot(q, async (querySnapshot) => {
-        const userMatchesPromises = querySnapshot.docs.map(async (docSnapshot) => {
-            const match = docSnapshot.data() as Omit<Match, 'id' | 'users'>;
-            
-            const userProfilesPromises = match.userIds.map(userId => getDoc(doc(db, 'users', userId)));
-            const userProfileDocs = await Promise.all(userProfilesPromises);
-            const users = userProfileDocs.map(doc => doc.data() as UserProfile).filter(Boolean);
-
-            return { ...match, id: docSnapshot.id, users };
-        });
-        
-        const resolvedMatches = await Promise.all(userMatchesPromises);
-        setMatches(resolvedMatches);
-    });
-
-    return () => unsubscribeMatches();
-
-  }, [user, setMatches]);
 
   useEffect(() => {
     if (!activeConversation) return;
