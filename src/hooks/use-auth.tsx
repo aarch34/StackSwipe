@@ -69,17 +69,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 const matchData = docSnapshot.data();
                 const otherUserId = matchData.userIds.find((id: string) => id !== user.uid);
                 
+                if (!otherUserId) return null;
+
                 const otherUserProfileDoc = await getDoc(doc(db, 'users', otherUserId));
+                
+                if (!otherUserProfileDoc.exists()) return null;
+
                 const otherUserProfile = otherUserProfileDoc.data() as UserProfile;
 
                 return { 
                     id: docSnapshot.id, 
                     ...matchData,
-                    users: [profile, otherUserProfile].filter(Boolean)
+                    users: [profile, otherUserProfile]
                 } as Match;
             });
             
-            const resolvedMatches = await Promise.all(userMatchesPromises);
+            const resolvedMatches = (await Promise.all(userMatchesPromises)).filter(Boolean) as Match[];
             setMatches(resolvedMatches);
         });
 
@@ -107,6 +112,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     const logout = async () => {
         await signOut(auth);
+        setProfile(null);
+        setUser(null);
+        setHasProfile(false);
+        setMatches([]);
         router.push('/');
     };
 

@@ -15,7 +15,6 @@ import { useAuth } from '@/hooks/use-auth';
 import { collection, doc, onSnapshot, addDoc, serverTimestamp, query, orderBy, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Timestamp } from 'firebase/firestore';
-import { config } from 'next/dist/build/templates/pages';
 
 
 function getConversationId(userId1: string, userId2: string) {
@@ -33,7 +32,7 @@ export default function MessagesPage() {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!activeConversation) return;
+    if (!activeConversation || !user) return; // Add guard for null user
 
     setLoadingMessages(true);
     const otherUserId = activeConversation.users.find(u => u.id !== user!.uid)?.id;
@@ -87,9 +86,6 @@ export default function MessagesPage() {
     const convId = getConversationId(user.uid, otherUserId);
     const convRef = doc(db, 'chats', convId);
     const convSnap = await getDoc(convRef);
-    
-    console.log(convRef)
-    console.log(convSnap)
 
     let conversationData: Conversation;
 
@@ -105,7 +101,6 @@ export default function MessagesPage() {
         };
         await setDoc(convRef, { userIds: conversationData.userIds, createdAt: serverTimestamp() });
     }
-    console.log(conversationData)
     setActiveConversation(conversationData);
   };
   
@@ -235,5 +230,3 @@ export default function MessagesPage() {
     </div>
   );
 }
-
-    
