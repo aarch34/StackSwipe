@@ -6,6 +6,7 @@ import { useRef } from 'react';
 import { ArrowRight, Briefcase, Code, Heart, UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Icons } from '@/components/icons';
+import { cn } from '@/lib/utils';
 
 export default function LandingPage() {
   const aboutRef = useRef<HTMLDivElement>(null);
@@ -34,17 +35,22 @@ export default function LandingPage() {
       </header>
 
       <main className="flex-1">
-        <section className="container mx-auto px-4 sm:px-6 lg:px-8 text-center py-20 md:py-32 flex flex-col items-center">
-            <h1 className="font-headline text-4xl md:text-6xl font-bold tracking-tight">
+        <section className="container mx-auto px-4 sm:px-6 lg:px-8 text-center py-20 md:py-32 flex flex-col items-center relative overflow-hidden">
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+                <div className="absolute animate-sun-spin w-[400px] h-[400px] md:w-[600px] md:h-[600px] rounded-full bg-primary/10" />
+                <div className="absolute animate-sun-spin-reverse w-[350px] h-[350px] md:w-[500px] md:h-[500px] rounded-full bg-primary/5" />
+                 <div className="absolute w-32 h-32 rounded-full bg-primary/20 animate-glow" />
+            </div>
+            <h1 className="font-headline text-4xl md:text-6xl font-bold tracking-tight relative z-10">
                 STACKSWIPE
             </h1>
-            <p className="mt-4 text-lg md:text-xl text-muted-foreground">
+            <p className="mt-4 text-lg md:text-xl text-muted-foreground relative z-10">
                 An AI-powered social networking application for tech professionals.
             </p>
-            <p className="mt-8 max-w-2xl text-base text-muted-foreground">
+            <p className="mt-8 max-w-2xl text-base text-muted-foreground relative z-10">
                 Connect with peers, find mentors, and collaborate on exciting projects. StackSwipe helps you build your professional network in the tech industry through intuitive, swipe-based matching.
             </p>
-            <div className="mt-10 flex flex-col sm:flex-row gap-4">
+            <div className="mt-10 flex flex-col sm:flex-row gap-4 relative z-10">
                 <Button size="lg" asChild>
                     <Link href="/auth">
                         Get Started <ArrowRight className="ml-2 h-5 w-5" />
