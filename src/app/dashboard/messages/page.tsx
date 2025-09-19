@@ -15,6 +15,8 @@ import { useAuth } from '@/hooks/use-auth';
 import { collection, doc, onSnapshot, addDoc, serverTimestamp, query, orderBy, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Timestamp } from 'firebase/firestore';
+import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
+import { ProfileCard } from '@/components/profile-card';
 
 
 function getConversationId(userId1: string, userId2: string) {
@@ -32,7 +34,7 @@ export default function MessagesPage() {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!activeConversation || !user) return; // Add guard for null user
+    if (!activeConversation || !user) return; 
 
     setLoadingMessages(true);
     const otherUserId = activeConversation.users.find(u => u.id !== user!.uid)?.id;
@@ -172,11 +174,20 @@ export default function MessagesPage() {
       <Card className="md:col-span-8 lg:col-span-9 flex flex-col h-full">
         {activeConversation && otherUser ? (
             <>
-              <CardHeader className="flex flex-row items-center gap-4 p-4 border-b">
-                 <Avatar>
-                    <AvatarFallback>{otherUser.name.charAt(0)}</AvatarFallback>
-                </Avatar>
-                <h2 className="text-lg font-semibold">{otherUser.name}</h2>
+              <CardHeader className="p-4 border-b">
+                <Dialog>
+                    <DialogTrigger asChild>
+                         <div className="flex items-center gap-4 cursor-pointer hover:bg-accent p-2 rounded-md">
+                            <Avatar>
+                                <AvatarFallback>{otherUser.name.charAt(0)}</AvatarFallback>
+                            </Avatar>
+                            <h2 className="text-lg font-semibold">{otherUser.name}</h2>
+                        </div>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-md p-0 bg-transparent border-0 shadow-none">
+                        <ProfileCard profile={otherUser} />
+                    </DialogContent>
+                </Dialog>
               </CardHeader>
               <CardContent className="flex-1 p-4 overflow-hidden">
                 <ScrollArea className="h-full" ref={scrollAreaRef}>
