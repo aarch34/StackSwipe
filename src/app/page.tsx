@@ -36,11 +36,7 @@ export default function LandingPage() {
 
       <main className="flex-1">
         <section className="container mx-auto px-4 sm:px-6 lg:px-8 text-center py-20 md:py-32 flex flex-col items-center relative overflow-hidden">
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-                <div className="absolute animate-sun-spin w-[400px] h-[400px] md:w-[600px] md:h-[600px] rounded-full bg-primary/10" />
-                <div className="absolute animate-sun-spin-reverse w-[350px] h-[350px] md:w-[500px] md:h-[500px] rounded-full bg-primary/5" />
-                 <div className="absolute w-32 h-32 rounded-full bg-primary/20 animate-glow" />
-            </div>
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/10 rounded-full blur-3xl" />
             <h1 className="font-headline text-4xl md:text-6xl font-bold tracking-tight relative z-10">
                 STACKSWIPE
             </h1>
