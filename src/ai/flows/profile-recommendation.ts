@@ -80,7 +80,7 @@ const profileRecommendationFlow = ai.defineFlow(
     // Filter out the current user's own profile from the list of all profiles
     // to avoid recommending the user to themselves.
     const currentUserProfile = JSON.parse(input.profileDetails);
-    const otherProfiles = input.allProfiles.filter(p => p.headline !== currentUserProfile.headline);
+    const otherProfiles = input.allProfiles.filter(p => p.id !== currentUserProfile.id);
 
     const {output} = await prompt({...input, allProfiles: otherProfiles });
     return output!;
