@@ -67,28 +67,28 @@ export default function LandingPage() {
                 </p>
             </div>
             <div className="mt-16 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 text-center">
-                <div className="flex flex-col items-center">
+                <div className="flex flex-col items-center p-6 rounded-lg transition-transform duration-300 hover:scale-105 hover:shadow-lg">
                     <div className="flex items-center justify-center h-12 w-12 rounded-full bg-primary text-primary-foreground">
                         <Heart className="h-6 w-6" />
                     </div>
                     <h3 className="mt-4 font-semibold">Swipe-Based Matching</h3>
                     <p className="mt-2 text-sm text-muted-foreground">Easily connect with tech professionals through a simple, intuitive swipe interface.</p>
                 </div>
-                 <div className="flex flex-col items-center">
+                 <div className="flex flex-col items-center p-6 rounded-lg transition-transform duration-300 hover:scale-105 hover:shadow-lg">
                     <div className="flex items-center justify-center h-12 w-12 rounded-full bg-primary text-primary-foreground">
                         <UserPlus className="h-6 w-6" />
                     </div>
                     <h3 className="mt-4 font-semibold">Detailed Profiles</h3>
                     <p className="mt-2 text-sm text-muted-foreground">Showcase your skills, interests, and link your GitHub and LinkedIn profiles.</p>
                 </div>
-                <div className="flex flex-col items-center">
+                <div className="flex flex-col items-center p-6 rounded-lg transition-transform duration-300 hover:scale-105 hover:shadow-lg">
                     <div className="flex items-center justify-center h-12 w-12 rounded-full bg-primary text-primary-foreground">
                         <Code className="h-6 w-6" />
                     </div>
                     <h3 className="mt-4 font-semibold">Mentorship Tags</h3>
                     <p className="mt-2 text-sm text-muted-foreground">Tag yourself as a 'Mentor' or 'Learner' to find the right connections for your career growth.</p>
                 </div>
-                <div className="flex flex-col items-center">
+                <div className="flex flex-col items-center p-6 rounded-lg transition-transform duration-300 hover:scale-105 hover:shadow-lg">
                     <div className="flex items-center justify-center h-12 w-12 rounded-full bg-primary text-primary-foreground">
                         <Briefcase className="h-6 w-6" />
                     </div>
