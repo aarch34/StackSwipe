@@ -29,8 +29,7 @@ service cloud.firestore {
 
     // Allow users to read/write messages if a corresponding match exists for that chat.
     match /chats/{chatId}/messages/{messageId} {
-      allow read, write: if exists(/databases/$(database)/documents/matches/$(chatId)) &&
-                          request.auth.uid in get(/databases/$(database)/documents/matches/$(chatId)).data.userIds;
+      allow read, write: if exists(/databases/$(database)/documents/matches/$(chatId));
     }
   }
 }
