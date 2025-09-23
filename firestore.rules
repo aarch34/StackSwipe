@@ -1,6 +1,15 @@
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    function isMatched(chatId) {
+      let userIds = get(/databases/$(database)/documents/chats/$(chatId)).data.userIds;
+      let matchId = userIds[0] < userIds[1]
+                      ? userIds[0] + '_' + userIds[1]
+                      : userIds[1] + '_' + userIds[0];
+      return exists(/databases/$(database)/documents/matches/$(matchId));
+    }
 
     // Allow authenticated users to read any profile, but only write to their own.
     match /users/{userId} {
@@ -28,12 +37,8 @@ service cloud.firestore {
     }
 
     // Allow users to read/write messages if a corresponding match exists for that chat.
-    // This rule verifies the match by constructing the matchId from the user IDs in the parent chat document.
     match /chats/{chatId}/messages/{messageId} {
-      allow read, write: if let chatDoc = get(/databases/$(database)/documents/chats/$(chatId)),
-                          let userIds = chatDoc.data.userIds,
-                          let matchId = (userIds[0] < userIds[1] ? userIds[0] + '_' + userIds[1] : userIds[1] + '_' + userIds[0])
-                          in exists(/databases/$(database)/documents/matches/$(matchId)) && request.auth.uid in userIds;
+      allow read, write: if isMatched(chatId) && request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.userIds;
     }
   }
 }
