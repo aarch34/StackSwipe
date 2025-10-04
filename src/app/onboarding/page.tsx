@@ -180,7 +180,7 @@ export default function OnboardingPage() {
                                         <FormField control={form.control} name="age" render={({ field }) => (
                                             <FormItem>
                                                 <FormLabel>Age</FormLabel>
-                                                <FormControl><Input type="number" {...field} placeholder="e.g., 28" /></FormControl>
+                                                <FormControl><Input type="number" {...field} /></FormControl>
                                                 <FormMessage />
                                             </FormItem>
                                         )} />
