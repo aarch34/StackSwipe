@@ -7,6 +7,8 @@ import { collection, doc, getDoc, onSnapshot, query, setDoc, where, getDocs } fr
 import { firebaseApp, db } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 import type { UserProfile, Match } from '@/lib/data';
+import { errorEmitter } from '@/lib/error-emitter';
+import { FirestorePermissionError } from '@/lib/errors';
 
 interface AuthContextType {
     user: User | null;
@@ -104,11 +106,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     
     const updateProfile = async (newProfile: UserProfile) => {
         if (user) {
-            // Firestore expects plain objects. Convert the state object to a plain JS object.
             const profileData = JSON.parse(JSON.stringify(newProfile));
-            await setDoc(doc(db, 'users', user.uid), profileData);
-            setProfile(newProfile);
-            setHasProfile(true);
+            const docRef = doc(db, 'users', user.uid);
+            
+            setDoc(docRef, profileData)
+              .then(() => {
+                setProfile(newProfile);
+                setHasProfile(true);
+              })
+              .catch(async (serverError) => {
+                  const permissionError = new FirestorePermissionError({
+                    path: docRef.path,
+                    operation: 'update',
+                    requestResourceData: profileData,
+                  });
+                  errorEmitter.emit('permission-error', permissionError);
+              });
         }
     };
 
