@@ -233,7 +233,7 @@ export default function OnboardingPage() {
                                     <FormItem className="flex flex-col items-center">
                                         <FormLabel>Profile Picture</FormLabel>
                                         <FormControl>
-                                            <>
+                                            <div>
                                                 <Avatar className="w-32 h-32 mb-4">
                                                     <AvatarImage src={photoURL} />
                                                     <AvatarFallback>
@@ -246,7 +246,7 @@ export default function OnboardingPage() {
                                                     onChange={handlePhotoUpload}
                                                     className="max-w-xs"
                                                 />
-                                            </>
+                                            </div>
                                         </FormControl>
                                         <FormDescription>
                                             Upload a picture for your profile.
