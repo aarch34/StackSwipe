@@ -23,6 +23,7 @@ import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
 import { db } from '@/lib/firebase';
 import { addDoc, collection, getDocs, query, where, serverTimestamp, doc, setDoc } from 'firebase/firestore';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 
 const SWIPE_LIMIT = 10;
@@ -40,6 +41,9 @@ export default function SwipePage() {
   
   const [locationFilter, setLocationFilter] = useState('');
   const [techStackFilter, setTechStackFilter] = useState('');
+  const [experienceLevelFilter, setExperienceLevelFilter] = useState('');
+  const [companyFilter, setCompanyFilter] = useState('');
+  const [collegeFilter, setCollegeFilter] = useState('');
 
 
   useEffect(() => {
@@ -76,6 +80,18 @@ export default function SwipePage() {
 
     if (locationFilter.trim()) {
         profiles = profiles.filter(p => p.location?.toLowerCase().includes(locationFilter.toLowerCase()));
+    }
+    
+    if (experienceLevelFilter.trim()) {
+        profiles = profiles.filter(p => p.experienceLevel === experienceLevelFilter);
+    }
+
+    if (companyFilter.trim()) {
+        profiles = profiles.filter(p => p.company?.toLowerCase().includes(companyFilter.toLowerCase()));
+    }
+    
+    if (collegeFilter.trim()) {
+        profiles = profiles.filter(p => p.college?.toLowerCase().includes(collegeFilter.toLowerCase()));
     }
 
     if (techStackFilter.trim()) {
@@ -211,6 +227,41 @@ export default function SwipePage() {
                                 placeholder="e.g., San Francisco, CA" 
                                 value={locationFilter}
                                 onChange={(e) => setLocationFilter(e.target.value)}
+                            />
+                        </div>
+                        <div>
+                            <Label htmlFor="experienceLevel">Experience Level</Label>
+                            <Select value={experienceLevelFilter} onValueChange={setExperienceLevelFilter}>
+                                <SelectTrigger id="experienceLevel">
+                                    <SelectValue placeholder="Any experience level" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="">Any</SelectItem>
+                                    <SelectItem value="Intern">Intern</SelectItem>
+                                    <SelectItem value="Junior">Junior</SelectItem>
+                                    <SelectItem value="Mid-level">Mid-level</SelectItem>
+                                    <SelectItem value="Senior">Senior</SelectItem>
+                                    <SelectItem value="Lead">Lead</SelectItem>
+                                    <SelectItem value="Manager">Manager</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div>
+                            <Label htmlFor="company">Company</Label>
+                            <Input 
+                                id="company" 
+                                placeholder="e.g., Google" 
+                                value={companyFilter}
+                                onChange={(e) => setCompanyFilter(e.target.value)}
+                            />
+                        </div>
+                        <div>
+                            <Label htmlFor="college">College</Label>
+                            <Input 
+                                id="college" 
+                                placeholder="e.g., MIT" 
+                                value={collegeFilter}
+                                onChange={(e) => setCollegeFilter(e.target.value)}
                             />
                         </div>
                         <div>

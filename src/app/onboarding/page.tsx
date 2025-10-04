@@ -34,6 +34,9 @@ const pictureStepSchema = z.object({
 
 const workStepSchema = z.object({
   currentWork: z.string().min(5, { message: 'Current work must be at least 5 characters.' }),
+  experienceLevel: z.enum(['Intern', 'Junior', 'Mid-level', 'Senior', 'Lead', 'Manager']),
+  company: z.string().optional(),
+  college: z.string().optional(),
   techStack: z.string().min(2, { message: 'Please add at least one skill.' }),
   interests: z.string().min(2, { message: 'Please add at least one interest.' }),
 });
@@ -50,7 +53,7 @@ const goalsStepSchema = z.object({
 const allSteps = [
     { id: 'Step 1', name: 'Profile Basics', fields: ['name', 'headline', 'bio', 'location', 'age', 'gender'], schema: profileStepSchema },
     { id: 'Step 2', name: 'Profile Picture', fields: ['photoURL'], schema: pictureStepSchema },
-    { id: 'Step 3', name: 'Work & Skills', fields: ['currentWork', 'techStack', 'interests'], schema: workStepSchema },
+    { id: 'Step 3', name: 'Work & Skills', fields: ['currentWork', 'experienceLevel', 'company', 'college', 'techStack', 'interests'], schema: workStepSchema },
     { id: 'Step 4', name: 'Social Links', fields: ['github', 'linkedin'], schema: socialStepSchema },
     { id: 'Step 5', name: 'Networking Goals', fields: ['networkingTags'], schema: goalsStepSchema },
 ];
@@ -73,14 +76,17 @@ export default function OnboardingPage() {
             bio: '',
             location: '',
             age: 18,
+            gender: '',
+            photoURL: '',
             currentWork: '',
+            experienceLevel: 'Junior',
+            company: '',
+            college: '',
             techStack: '',
             interests: '',
             networkingTags: '',
             github: '',
             linkedin: '',
-            gender: '',
-            photoURL: '',
         },
     });
 
@@ -126,6 +132,9 @@ export default function OnboardingPage() {
             gender: data.gender,
             photoURL: data.photoURL,
             currentWork: data.currentWork,
+            experienceLevel: data.experienceLevel,
+            company: data.company || '',
+            college: data.college || '',
             techStack: (data.techStack || '').split(',').map(item => item.trim()).filter(Boolean),
             interests: (data.interests || '').split(',').map(item => item.trim()).filter(Boolean),
             networkingTags: (data.networkingTags || '').split(',').map(item => item.trim()).filter(Boolean),
@@ -262,6 +271,41 @@ export default function OnboardingPage() {
                                         <FormItem>
                                             <FormLabel>Current Work</FormLabel>
                                             <FormControl><Input {...field} placeholder="e.g., Building a new design system." /></FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )} />
+                                     <FormField control={form.control} name="experienceLevel" render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Experience Level</FormLabel>
+                                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                <FormControl>
+                                                    <SelectTrigger>
+                                                        <SelectValue placeholder="Select your experience level" />
+                                                    </SelectTrigger>
+                                                </FormControl>
+                                                <SelectContent>
+                                                    <SelectItem value="Intern">Intern</SelectItem>
+                                                    <SelectItem value="Junior">Junior</SelectItem>
+                                                    <SelectItem value="Mid-level">Mid-level</SelectItem>
+                                                    <SelectItem value="Senior">Senior</SelectItem>
+                                                    <SelectItem value="Lead">Lead</SelectItem>
+                                                    <SelectItem value="Manager">Manager</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )} />
+                                     <FormField control={form.control} name="company" render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Company (optional)</FormLabel>
+                                            <FormControl><Input {...field} placeholder="e.g., Google" /></FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )} />
+                                     <FormField control={form.control} name="college" render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>College (optional)</FormLabel>
+                                            <FormControl><Input {...field} placeholder="e.g., University of California" /></FormControl>
                                             <FormMessage />
                                         </FormItem>
                                     )} />

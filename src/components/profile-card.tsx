@@ -1,7 +1,7 @@
 
 'use client';
 import Link from 'next/link';
-import { Github, Linkedin, Briefcase, Code, Sparkles as InterestIcon, MapPin } from 'lucide-react';
+import { Github, Linkedin, Briefcase, Code, Sparkles as InterestIcon, MapPin, Building, GraduationCap } from 'lucide-react';
 import { type UserProfile } from '@/lib/data';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -35,7 +35,17 @@ export function ProfileCard({ profile }: ProfileCardProps) {
             <h4 className="flex items-center text-sm font-semibold"><Briefcase className="mr-2 h-4 w-4" /> Current Work</h4>
             <p className="text-sm text-muted-foreground pl-6">{profile.currentWork}</p>
         </div>
+
+        <div className="space-y-2">
+            <h4 className="flex items-center text-sm font-semibold"><Building className="mr-2 h-4 w-4" /> Company & Experience</h4>
+            <p className="text-sm text-muted-foreground pl-6">{profile.experienceLevel} at {profile.company || 'N/A'}</p>
+        </div>
         
+        <div className="space-y-2">
+            <h4 className="flex items-center text-sm font-semibold"><GraduationCap className="mr-2 h-4 w-4" /> Education</h4>
+            <p className="text-sm text-muted-foreground pl-6">{profile.college || 'N/A'}</p>
+        </div>
+
         <div className="space-y-2">
              <h4 className="flex items-center text-sm font-semibold"><Code className="mr-2 h-4 w-4" /> Tech Stack</h4>
             <div className="flex flex-wrap gap-2 pl-6">

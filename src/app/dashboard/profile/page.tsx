@@ -32,6 +32,9 @@ export default function ProfilePage() {
                 location: initialProfile.location ?? '',
                 age: initialProfile.age ?? 18,
                 gender: initialProfile.gender ?? '',
+                experienceLevel: initialProfile.experienceLevel ?? '',
+                company: initialProfile.company ?? '',
+                college: initialProfile.college ?? '',
                 photoURL: initialProfile.photoURL ?? '',
                 techStack: initialProfile.techStack ?? [],
                 interests: initialProfile.interests ?? [],
@@ -84,7 +87,7 @@ export default function ProfilePage() {
         setProfile(prev => prev ? ({ ...prev, [field]: value.split(',').map(item => item.trim()) }) : null);
     };
 
-    const handleSelectChange = (field: 'gender', value: string) => {
+    const handleSelectChange = (field: 'gender' | 'experienceLevel', value: string) => {
          setProfile(prev => prev ? ({ ...prev, [field]: value }) : null);
     }
 
@@ -188,6 +191,33 @@ export default function ProfilePage() {
                         <div className="space-y-2">
                             <Label htmlFor="currentWork">Current Work</Label>
                             <Input id="currentWork" name="currentWork" value={profile.currentWork} onChange={handleInputChange} />
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                             <div className="space-y-2">
+                                <Label htmlFor="experienceLevel">Experience Level</Label>
+                                <Select value={profile.experienceLevel} onValueChange={(value) => handleSelectChange('experienceLevel', value as UserProfile['experienceLevel'])}>
+                                    <SelectTrigger id="experienceLevel">
+                                        <SelectValue placeholder="Select your experience level" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="Intern">Intern</SelectItem>
+                                        <SelectItem value="Junior">Junior</SelectItem>
+                                        <SelectItem value="Mid-level">Mid-level</SelectItem>
+                                        <SelectItem value="Senior">Senior</SelectItem>
+                                        <SelectItem value="Lead">Lead</SelectItem>
+                                        <SelectItem value="Manager">Manager</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                             <div className="space-y-2">
+                                <Label htmlFor="company">Company</Label>
+                                <Input id="company" name="company" value={profile.company} onChange={handleInputChange} />
+                            </div>
+                        </div>
+                         <div className="space-y-2">
+                            <Label htmlFor="college">College</Label>
+                            <Input id="college" name="college" value={profile.college} onChange={handleInputChange} />
                         </div>
                         
                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

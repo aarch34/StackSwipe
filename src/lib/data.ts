@@ -10,6 +10,9 @@ export type UserProfile = {
   location: string;
   age: number;
   gender: string;
+  experienceLevel: 'Intern' | 'Junior' | 'Mid-level' | 'Senior' | 'Lead' | 'Manager' | '';
+  company: string;
+  college: string;
   photoURL?: string;
   techStack: string[];
   interests: string[];

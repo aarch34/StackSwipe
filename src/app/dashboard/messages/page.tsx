@@ -20,7 +20,11 @@ import { ProfileCard } from '@/components/profile-card';
 
 
 function getConversationId(userId1: string, userId2: string) {
-  
+    if (!userId1 || !userId2) {
+      console.error("One of the user IDs is undefined.", { userId1, userId2 });
+      // Return a value or throw an error that makes it clear something is wrong
+      return 'invalid_conversation_id';
+    }
     return [userId1, userId2].sort().join('_');
 }
 
