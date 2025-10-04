@@ -13,6 +13,8 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { UserProfile } from '@/lib/data';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { User as UserIcon } from 'lucide-react';
 
 export default function ProfilePage() {
     const { profile: initialProfile, updateProfile, loading } = useAuth();
@@ -33,7 +35,7 @@ export default function ProfilePage() {
                     </CardHeader>
                     <CardContent className="space-y-6">
                          <div className="flex justify-center">
-                            <Skeleton className="h-24 w-24 rounded-full" />
+                            <Skeleton className="h-32 w-32 rounded-full" />
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-2"><Skeleton className="h-4 w-1/4" /><Skeleton className="h-10 w-full" /></div>
@@ -67,6 +69,17 @@ export default function ProfilePage() {
          setProfile(prev => prev ? ({ ...prev, [field]: value }) : null);
     }
 
+    const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setProfile(prev => prev ? { ...prev, photoURL: reader.result as string } : null);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (profile) {
@@ -95,6 +108,21 @@ export default function ProfilePage() {
                 </CardHeader>
                 <CardContent>
                     <form onSubmit={handleSubmit} className="space-y-6">
+                        <div className="flex flex-col items-center space-y-4">
+                            <Avatar className="w-32 h-32">
+                                <AvatarImage src={profile.photoURL} />
+                                <AvatarFallback>
+                                    <UserIcon className="w-16 h-16" />
+                                </AvatarFallback>
+                            </Avatar>
+                            <Input
+                                type="file"
+                                accept="image/*"
+                                onChange={handlePhotoUpload}
+                                className="max-w-xs text-sm"
+                            />
+                        </div>
+
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-2">
                                 <Label htmlFor="name">Name</Label>
@@ -180,7 +208,7 @@ export default function ProfilePage() {
                             <div className="flex flex-wrap gap-2 pt-2">
                                 {(profile.interests ?? []).filter(Boolean).map((interest) => (
                                     <Badge key={interest} variant="secondary">{interest}</Badge>
-                                ))}
+                               _))}
                             </div>
                         </div>
                         

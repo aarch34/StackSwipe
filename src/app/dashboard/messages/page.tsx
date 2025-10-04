@@ -4,7 +4,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { Send, Search } from 'lucide-react';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -158,6 +158,7 @@ export default function MessagesPage() {
                       )}
                     >
                       <Avatar>
+                        <AvatarImage src={matchUser.photoURL} alt={matchUser.name} />
                         <AvatarFallback>{matchUser.name.charAt(0)}</AvatarFallback>
                       </Avatar>
                       <div className="flex-1 truncate">
@@ -179,6 +180,7 @@ export default function MessagesPage() {
                     <DialogTrigger asChild>
                          <div className="flex items-center gap-4 cursor-pointer hover:bg-accent p-2 rounded-md">
                             <Avatar>
+                                <AvatarImage src={otherUser.photoURL} alt={otherUser.name} />
                                 <AvatarFallback>{otherUser.name.charAt(0)}</AvatarFallback>
                             </Avatar>
                             <h2 className="text-lg font-semibold">{otherUser.name}</h2>
@@ -200,7 +202,12 @@ export default function MessagesPage() {
 
                           return (
                               <div key={message.id} className={cn('flex items-end gap-2', senderIsMe ? 'justify-end' : 'justify-start')}>
-                                  {!senderIsMe && <Avatar className="h-8 w-8"><AvatarFallback>{messageSenderProfile?.name.charAt(0)}</AvatarFallback></Avatar>}
+                                  {!senderIsMe && (
+                                    <Avatar className="h-8 w-8">
+                                      <AvatarImage src={messageSenderProfile?.photoURL} alt={messageSenderProfile?.name} />
+                                      <AvatarFallback>{messageSenderProfile?.name.charAt(0)}</AvatarFallback>
+                                    </Avatar>
+                                  )}
                                   <div className={cn(
                                       "max-w-xs md:max-w-md lg:max-w-lg rounded-xl px-4 py-2", 
                                       senderIsMe ? 'bg-primary text-primary-foreground' : 'bg-secondary'

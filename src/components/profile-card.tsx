@@ -5,6 +5,7 @@ import { Github, Linkedin, Briefcase, Code, Sparkles as InterestIcon, MapPin } f
 import { type UserProfile } from '@/lib/data';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 
 interface ProfileCardProps {
   profile: UserProfile;
@@ -13,16 +14,22 @@ interface ProfileCardProps {
 export function ProfileCard({ profile }: ProfileCardProps) {
   return (
     <Card className="w-full max-w-sm rounded-2xl shadow-xl overflow-hidden transform transition-all duration-300 hover:scale-105 hover:shadow-2xl h-full flex flex-col">
-      <CardHeader className="p-6 pb-2">
+      <div className="relative h-48 bg-secondary">
+          <Avatar className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 w-28 h-28 border-4 border-background">
+              <AvatarImage src={profile.photoURL} alt={profile.name}/>
+              <AvatarFallback>{profile.name.charAt(0)}</AvatarFallback>
+          </Avatar>
+      </div>
+      <CardHeader className="p-6 pb-2 pt-16 text-center">
             <CardTitle className="font-headline text-2xl">{profile.name}, {profile.age}</CardTitle>
-            <CardDescription className="flex items-center gap-1.5 text-muted-foreground">
+            <CardDescription className="flex items-center justify-center gap-1.5 text-muted-foreground">
               <MapPin className="h-4 w-4" />
               {profile.location}
             </CardDescription>
             <CardDescription>{profile.headline}</CardDescription>
       </CardHeader>
       <CardContent className="px-6 py-2 space-y-4 flex-1">
-        <p className="text-sm text-muted-foreground">{profile.bio}</p>
+        <p className="text-sm text-muted-foreground text-center">{profile.bio}</p>
         
         <div className="space-y-2">
             <h4 className="flex items-center text-sm font-semibold"><Briefcase className="mr-2 h-4 w-4" /> Current Work</h4>

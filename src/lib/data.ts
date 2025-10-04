@@ -10,6 +10,7 @@ export type UserProfile = {
   location: string;
   age: number;
   gender: string;
+  photoURL?: string;
   techStack: string[];
   interests: string[];
   networkingTags: string[];

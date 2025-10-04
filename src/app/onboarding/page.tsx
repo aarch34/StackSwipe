@@ -13,9 +13,11 @@ import { Progress } from '@/components/ui/progress';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import type { UserProfile } from '@/lib/data';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { User as UserIcon } from 'lucide-react';
 
 const profileStepSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
@@ -24,6 +26,10 @@ const profileStepSchema = z.object({
   location: z.string().min(2, { message: 'Location must be at least 2 characters.' }),
   age: z.coerce.number().min(18, { message: 'You must be at least 18.' }).max(99),
   gender: z.string().min(1, { message: 'Please select a gender.'}),
+});
+
+const pictureStepSchema = z.object({
+    photoURL: z.string().optional(),
 });
 
 const workStepSchema = z.object({
@@ -43,13 +49,14 @@ const goalsStepSchema = z.object({
 
 const allSteps = [
     { id: 'Step 1', name: 'Profile Basics', fields: ['name', 'headline', 'bio', 'location', 'age', 'gender'], schema: profileStepSchema },
-    { id: 'Step 2', name: 'Work & Skills', fields: ['currentWork', 'techStack', 'interests'], schema: workStepSchema },
-    { id: 'Step 3', name: 'Social Links', fields: ['github', 'linkedin'], schema: socialStepSchema },
-    { id: 'Step 4', name: 'Networking Goals', fields: ['networkingTags'], schema: goalsStepSchema },
+    { id: 'Step 2', name: 'Profile Picture', fields: ['photoURL'], schema: pictureStepSchema },
+    { id: 'Step 3', name: 'Work & Skills', fields: ['currentWork', 'techStack', 'interests'], schema: workStepSchema },
+    { id: 'Step 4', name: 'Social Links', fields: ['github', 'linkedin'], schema: socialStepSchema },
+    { id: 'Step 5', name: 'Networking Goals', fields: ['networkingTags'], schema: goalsStepSchema },
 ];
 
 
-const fullSchema = profileStepSchema.merge(workStepSchema).merge(socialStepSchema).merge(goalsStepSchema);
+const fullSchema = profileStepSchema.merge(pictureStepSchema).merge(workStepSchema).merge(socialStepSchema).merge(goalsStepSchema);
 type FormValues = z.infer<typeof fullSchema>;
 
 export default function OnboardingPage() {
@@ -72,6 +79,7 @@ export default function OnboardingPage() {
             github: '',
             linkedin: '',
             gender: '',
+            photoURL: '',
         },
     });
 
@@ -84,6 +92,17 @@ export default function OnboardingPage() {
 
     const prevStep = () => {
         setStep((prev) => prev - 1);
+    };
+
+    const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                form.setValue('photoURL', reader.result as string);
+            };
+            reader.readAsDataURL(file);
+        }
     };
 
     const onSubmit: SubmitHandler<FormValues> = async (data) => {
@@ -104,6 +123,7 @@ export default function OnboardingPage() {
             location: data.location,
             age: data.age,
             gender: data.gender,
+            photoURL: data.photoURL,
             currentWork: data.currentWork,
             techStack: (data.techStack || '').split(',').map(item => item.trim()).filter(Boolean),
             interests: (data.interests || '').split(',').map(item => item.trim()).filter(Boolean),
@@ -132,6 +152,7 @@ export default function OnboardingPage() {
     };
 
     const progress = ((step + 1) / allSteps.length) * 100;
+    const photoURL = form.watch('photoURL');
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-background p-4">
@@ -208,6 +229,33 @@ export default function OnboardingPage() {
                                 </>
                             )}
                              {step === 1 && (
+                                <FormField control={form.control} name="photoURL" render={({ field }) => (
+                                    <FormItem className="flex flex-col items-center">
+                                        <FormLabel>Profile Picture</FormLabel>
+                                        <FormControl>
+                                            <>
+                                                <Avatar className="w-32 h-32 mb-4">
+                                                    <AvatarImage src={photoURL} />
+                                                    <AvatarFallback>
+                                                        <UserIcon className="w-16 h-16" />
+                                                    </AvatarFallback>
+                                                </Avatar>
+                                                <Input
+                                                    type="file"
+                                                    accept="image/*"
+                                                    onChange={handlePhotoUpload}
+                                                    className="max-w-xs"
+                                                />
+                                            </>
+                                        </FormControl>
+                                        <FormDescription>
+                                            Upload a picture for your profile.
+                                        </FormDescription>
+                                        <FormMessage />
+                                    </FormItem>
+                                )} />
+                            )}
+                             {step === 2 && (
                                 <>
                                     <FormField control={form.control} name="currentWork" render={({ field }) => (
                                         <FormItem>
@@ -232,7 +280,7 @@ export default function OnboardingPage() {
                                     )} />
                                 </>
                             )}
-                            {step === 2 && (
+                            {step === 3 && (
                                 <>
                                     <FormField control={form.control} name="github" render={({ field }) => (
                                         <FormItem>
@@ -250,7 +298,7 @@ export default function OnboardingPage() {
                                     )} />
                                 </>
                             )}
-                             {step === 3 && (
+                             {step === 4 && (
                                 <>
                                     <FormField control={form.control} name="networkingTags" render={({ field }) => (
                                         <FormItem>
