@@ -15,7 +15,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { collection, doc, onSnapshot, addDoc, serverTimestamp, query, orderBy, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Timestamp } from 'firebase/firestore';
-import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { ProfileCard } from '@/components/profile-card';
 
 
@@ -187,6 +187,12 @@ export default function MessagesPage() {
                         </div>
                     </DialogTrigger>
                     <DialogContent className="max-w-md p-0 bg-transparent border-0 shadow-none">
+                        <DialogHeader className="sr-only">
+                          <DialogTitle>User Profile: {otherUser.name}</DialogTitle>
+                          <DialogDescription>
+                            This dialog displays the detailed profile of {otherUser.name}.
+                          </DialogDescription>
+                        </DialogHeader>
                         <ProfileCard profile={otherUser} />
                     </DialogContent>
                 </Dialog>
