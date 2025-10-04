@@ -208,7 +208,7 @@ export default function ProfilePage() {
                             <div className="flex flex-wrap gap-2 pt-2">
                                 {(profile.interests ?? []).filter(Boolean).map((interest) => (
                                     <Badge key={interest} variant="secondary">{interest}</Badge>
-                               _))}
+                               ))}
                             </div>
                         </div>
                         
@@ -235,4 +235,3 @@ export default function ProfilePage() {
             </Card>
         </main>
     );
-}
