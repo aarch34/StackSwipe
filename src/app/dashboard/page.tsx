@@ -82,7 +82,7 @@ export default function SwipePage() {
         profiles = profiles.filter(p => p.location?.toLowerCase().includes(locationFilter.toLowerCase()));
     }
     
-    if (experienceLevelFilter.trim()) {
+    if (experienceLevelFilter.trim() && experienceLevelFilter !== 'any') {
         profiles = profiles.filter(p => p.experienceLevel === experienceLevelFilter);
     }
 
@@ -236,7 +236,7 @@ export default function SwipePage() {
                                     <SelectValue placeholder="Any experience level" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="">Any</SelectItem>
+                                    <SelectItem value="any">Any</SelectItem>
                                     <SelectItem value="Intern">Intern</SelectItem>
                                     <SelectItem value="Junior">Junior</SelectItem>
                                     <SelectItem value="Mid-level">Mid-level</SelectItem>
