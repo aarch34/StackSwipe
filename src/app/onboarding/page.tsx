@@ -72,6 +72,7 @@ export default function OnboardingPage() {
             headline: '',
             bio: '',
             location: '',
+            age: 18,
             currentWork: '',
             techStack: '',
             interests: '',

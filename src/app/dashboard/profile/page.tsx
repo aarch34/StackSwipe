@@ -24,7 +24,7 @@ export default function ProfilePage() {
     useEffect(() => {
         if (initialProfile) {
             setProfile({
-                ...initialProfile,
+                id: initialProfile.id || '',
                 name: initialProfile.name ?? '',
                 headline: initialProfile.headline ?? '',
                 bio: initialProfile.bio ?? '',
