@@ -104,7 +104,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     
     const updateProfile = async (newProfile: UserProfile) => {
         if (user) {
-            await setDoc(doc(db, 'users', user.uid), newProfile);
+            // Firestore expects plain objects. Convert the state object to a plain JS object.
+            const profileData = JSON.parse(JSON.stringify(newProfile));
+            await setDoc(doc(db, 'users', user.uid), profileData);
             setProfile(newProfile);
             setHasProfile(true);
         }
