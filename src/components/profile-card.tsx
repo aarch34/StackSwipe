@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-import { Briefcase, Code, Github, GraduationCap, Heart, Linkedin, MapPin } from 'lucide-react';
+import { Briefcase, Code, Github, GraduationCap, Heart, Linkedin, MapPin, Sparkles } from 'lucide-react';
 import { type UserProfile } from '@/lib/data';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -88,7 +88,7 @@ export function ProfileCard({ profile }: ProfileCardProps) {
                 )}
 
                 {profile.interests && profile.interests.length > 0 && (
-                    <ProfileSection icon={SparklesIcon} title="Interests">
+                    <ProfileSection icon={Sparkles} title="Interests">
                         <div className="flex flex-wrap gap-2">
                             {profile.interests.map((interest) => (
                                 <Badge key={interest} variant="outline">{interest}</Badge>
@@ -113,23 +113,4 @@ export function ProfileCard({ profile }: ProfileCardProps) {
         </ScrollArea>
     </Card>
   );
-}
-
-function SparklesIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="m12 3-1.9 5.8-5.8 1.9 5.8 1.9L12 18l1.9-5.8 5.8-1.9-5.8-1.9Z" />
-    </svg>
-  )
 }
