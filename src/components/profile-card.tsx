@@ -13,7 +13,7 @@ interface ProfileCardProps {
 
 export function ProfileCard({ profile }: ProfileCardProps) {
   return (
-    <Card className="w-full max-w-sm rounded-2xl shadow-xl overflow-hidden transform transition-all duration-300 hover:scale-105 hover:shadow-2xl h-full flex flex-col">
+    <Card className="w-full max-w-sm rounded-2xl shadow-xl transform transition-all duration-300 hover:scale-105 hover:shadow-2xl h-full flex flex-col overflow-hidden">
       <div className="relative h-48 bg-secondary">
           <Avatar className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 w-28 h-28 border-4 border-background">
               <AvatarImage src={profile.photoURL} alt={profile.name}/>
