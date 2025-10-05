@@ -109,7 +109,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             const profileData = JSON.parse(JSON.stringify(newProfile));
             const docRef = doc(db, 'users', user.uid);
             
-            setDoc(docRef, profileData)
+            await setDoc(docRef, profileData)
               .then(() => {
                 setProfile(newProfile);
                 setHasProfile(true);
@@ -121,6 +121,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                     requestResourceData: profileData,
                   });
                   errorEmitter.emit('permission-error', permissionError);
+                  // Re-throw the error if you want to handle it further up the chain
+                  throw serverError;
               });
         }
     };
