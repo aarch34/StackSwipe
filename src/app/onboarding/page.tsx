@@ -49,8 +49,6 @@ const socialStepSchema = z.object({
 
 const networkingGoalOptions = [
     { id: 'hackathon-teammate', label: 'Hackathon Teammate' },
-    { id: 'referrals', label: 'Referrals' },
-    { id: 'networking', label: 'Networking' },
     { id: 'mentor-mentee', label: 'Looking for a Mentor / Mentee' },
     { id: 'collaborator-partner', label: 'Looking for a Collaborator / Partner' },
     { id: 'hire-get-hired', label: 'Looking to Hire / Get Hired' },
@@ -431,5 +429,7 @@ export default function OnboardingPage() {
             </Card>
         </div>
     );
+
+    
 
     

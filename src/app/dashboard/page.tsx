@@ -40,8 +40,6 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 const SWIPE_LIMIT = 10;
 const networkingGoalOptions = [
     'Hackathon Teammate',
-    'Referrals',
-    'Networking',
     'Looking for a Mentor / Mentee',
     'Looking for a Collaborator / Partner',
     'Looking to Hire / Get Hired',

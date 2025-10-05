@@ -19,8 +19,6 @@ import { Checkbox } from '@/components/ui/checkbox';
 
 const networkingGoalOptions = [
     'Hackathon Teammate',
-    'Referrals',
-    'Networking',
     'Looking for a Mentor / Mentee',
     'Looking for a Collaborator / Partner',
     'Looking to Hire / Get Hired',
@@ -319,5 +317,7 @@ export default function ProfilePage() {
             </Card>
         </main>
     );
+
+    
 
     
