@@ -24,9 +24,22 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { db } from '@/lib/firebase';
 import { addDoc, collection, getDocs, query, where, serverTimestamp, doc, setDoc } from 'firebase/firestore';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 
 
 const SWIPE_LIMIT = 10;
+const networkingGoalOptions = [
+    'Hackathon Teammate',
+    'Referrals',
+    'Networking',
+    'Looking for a Mentor / Mentee',
+    'Looking for a Collaborator / Partner',
+    'Looking to Hire / Get Hired',
+    'Looking for Friends / Peers in my Field',
+    'Looking to Learn or Teach Something',
+    'Project / Startup Networking',
+];
+
 
 export default function SwipePage() {
   const { user } = useAuth();
@@ -44,6 +57,7 @@ export default function SwipePage() {
   const [experienceLevelFilter, setExperienceLevelFilter] = useState('');
   const [companyFilter, setCompanyFilter] = useState('');
   const [collegeFilter, setCollegeFilter] = useState('');
+  const [networkingGoalsFilter, setNetworkingGoalsFilter] = useState<string[]>([]);
 
 
   useEffect(() => {
@@ -74,6 +88,16 @@ export default function SwipePage() {
     }
     fetchProfiles();
   }, [user, toast]);
+  
+  const handleNetworkingTagChange = (tag: string, checked: boolean) => {
+    setNetworkingGoalsFilter(prev => {
+        const currentTags = prev || [];
+        const newTags = checked
+            ? [...currentTags, tag]
+            : currentTags.filter(t => t !== tag);
+        return newTags;
+    });
+  };
 
   const handleApplyFilters = () => {
     let profiles = [...allProfiles];
@@ -98,6 +122,12 @@ export default function SwipePage() {
         const skills = techStackFilter.toLowerCase().split(',').map(s => s.trim());
         profiles = profiles.filter(p => 
             p.techStack.some(skill => skills.includes(skill.toLowerCase()))
+        );
+    }
+
+    if (networkingGoalsFilter.length > 0) {
+        profiles = profiles.filter(p => 
+            p.networkingTags.some(tag => networkingGoalsFilter.includes(tag))
         );
     }
     
@@ -245,6 +275,26 @@ export default function SwipePage() {
                                     <SelectItem value="Manager">Manager</SelectItem>
                                 </SelectContent>
                             </Select>
+                        </div>
+                        <div>
+                            <Label>Networking Goals</Label>
+                             <div className="space-y-2 rounded-md border p-4">
+                                {networkingGoalOptions.map((goal) => (
+                                    <div key={goal} className="flex items-center space-x-2">
+                                        <Checkbox
+                                            id={`filter-goal-${goal.replace(/\s/g, '-')}`}
+                                            checked={networkingGoalsFilter.includes(goal)}
+                                            onCheckedChange={(checked) => handleNetworkingTagChange(goal, !!checked)}
+                                        />
+                                        <label
+                                            htmlFor={`filter-goal-${goal.replace(/\s/g, '-')}`}
+                                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                        >
+                                            {goal}
+                                        </label>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                         <div>
                             <Label htmlFor="company">Company</Label>
