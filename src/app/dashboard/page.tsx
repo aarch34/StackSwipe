@@ -18,13 +18,14 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescription, SheetClose } from '@/components/ui/sheet';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
 import { db } from '@/lib/firebase';
 import { addDoc, collection, getDocs, query, where, serverTimestamp, doc, setDoc } from 'firebase/firestore';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 
 const SWIPE_LIMIT = 10;
@@ -234,102 +235,106 @@ export default function SwipePage() {
     <main className="container mx-auto p-4 md:p-8">
       <div className="flex flex-col items-center justify-start space-y-6">
         <div className="w-full max-w-sm flex justify-end">
-            <Sheet>
-                <SheetTrigger asChild>
+            <Dialog>
+                <DialogTrigger asChild>
                     <Button variant="outline">
                         <SlidersHorizontal className="mr-2 h-4 w-4" /> Filters
                     </Button>
-                </SheetTrigger>
-                <SheetContent>
-                    <SheetHeader>
-                        <SheetTitle className="font-headline flex items-center gap-2">
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                        <DialogTitle className="font-headline flex items-center gap-2">
                             <SlidersHorizontal/> Filters
-                        </SheetTitle>
-                        <SheetDescription>
-                            Refine your search to find the perfect match.
-                        </SheetDescription>
-                    </SheetHeader>
-                    <div className="py-4 space-y-4">
-                        <div>
-                            <Label htmlFor="location">Location</Label>
-                            <Input 
-                                id="location" 
-                                placeholder="e.g., San Francisco, CA" 
-                                value={locationFilter}
-                                onChange={(e) => setLocationFilter(e.target.value)}
-                            />
-                        </div>
-                        <div>
-                            <Label htmlFor="experienceLevel">Experience Level</Label>
-                            <Select value={experienceLevelFilter} onValueChange={setExperienceLevelFilter}>
-                                <SelectTrigger id="experienceLevel">
-                                    <SelectValue placeholder="Any experience level" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="any">Any</SelectItem>
-                                    <SelectItem value="Intern">Intern</SelectItem>
-                                    <SelectItem value="Junior">Junior</SelectItem>
-                                    <SelectItem value="Mid-level">Mid-level</SelectItem>
-                                    <SelectItem value="Senior">Senior</SelectItem>
-                                    <SelectItem value="Lead">Lead</SelectItem>
-                                    <SelectItem value="Manager">Manager</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div>
-                            <Label>Networking Goals</Label>
-                             <div className="space-y-2 rounded-md border p-4">
-                                {networkingGoalOptions.map((goal) => (
-                                    <div key={goal} className="flex items-center space-x-2">
-                                        <Checkbox
-                                            id={`filter-goal-${goal.replace(/\s/g, '-')}`}
-                                            checked={networkingGoalsFilter.includes(goal)}
-                                            onCheckedChange={(checked) => handleNetworkingTagChange(goal, !!checked)}
-                                            className="flex-shrink-0"
-                                        />
-                                        <label
-                                            htmlFor={`filter-goal-${goal.replace(/\s/g, '-')}`}
-                                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                                        >
-                                            {goal}
-                                        </label>
-                                    </div>
-                                ))}
+                        </DialogTitle>
+                        <DialogDescription>
+                            Refine your search to find the perfect match. Click apply when you're done.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <ScrollArea className="max-h-[60vh] p-4">
+                        <div className="space-y-4">
+                            <div>
+                                <Label htmlFor="location">Location</Label>
+                                <Input 
+                                    id="location" 
+                                    placeholder="e.g., San Francisco, CA" 
+                                    value={locationFilter}
+                                    onChange={(e) => setLocationFilter(e.target.value)}
+                                />
+                            </div>
+                            <div>
+                                <Label htmlFor="experienceLevel">Experience Level</Label>
+                                <Select value={experienceLevelFilter} onValueChange={setExperienceLevelFilter}>
+                                    <SelectTrigger id="experienceLevel">
+                                        <SelectValue placeholder="Any experience level" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="any">Any</SelectItem>
+                                        <SelectItem value="Intern">Intern</SelectItem>
+                                        <SelectItem value="Junior">Junior</SelectItem>
+                                        <SelectItem value="Mid-level">Mid-level</SelectItem>
+                                        <SelectItem value="Senior">Senior</SelectItem>
+                                        <SelectItem value="Lead">Lead</SelectItem>
+                                        <SelectItem value="Manager">Manager</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div>
+                                <Label>Networking Goals</Label>
+                                 <div className="space-y-2 rounded-md border p-4">
+                                    {networkingGoalOptions.map((goal) => (
+                                        <div key={goal} className="flex items-center space-x-2">
+                                            <Checkbox
+                                                id={`filter-goal-${goal.replace(/\s/g, '-')}`}
+                                                checked={networkingGoalsFilter.includes(goal)}
+                                                onCheckedChange={(checked) => handleNetworkingTagChange(goal, !!checked)}
+                                                className="flex-shrink-0"
+                                            />
+                                            <label
+                                                htmlFor={`filter-goal-${goal.replace(/\s/g, '-')}`}
+                                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                            >
+                                                {goal}
+                                            </label>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                            <div>
+                                <Label htmlFor="company">Company</Label>
+                                <Input 
+                                    id="company" 
+                                    placeholder="e.g., Google" 
+                                    value={companyFilter}
+                                    onChange={(e) => setCompanyFilter(e.target.value)}
+                                />
+                            </div>
+                            <div>
+                                <Label htmlFor="college">College</Label>
+                                <Input 
+                                    id="college" 
+                                    placeholder="e.g., MIT" 
+                                    value={collegeFilter}
+                                    onChange={(e) => setCollegeFilter(e.target.value)}
+                                />
+                            </div>
+                            <div>
+                                <Label htmlFor="tech-stack">Tech Stack (comma-separated)</Label>
+                                <Input 
+                                    id="tech-stack" 
+                                    placeholder="e.g., React, Python" 
+                                    value={techStackFilter}
+                                    onChange={(e) => setTechStackFilter(e.target.value)}
+                                />
                             </div>
                         </div>
-                        <div>
-                            <Label htmlFor="company">Company</Label>
-                            <Input 
-                                id="company" 
-                                placeholder="e.g., Google" 
-                                value={companyFilter}
-                                onChange={(e) => setCompanyFilter(e.target.value)}
-                            />
-                        </div>
-                        <div>
-                            <Label htmlFor="college">College</Label>
-                            <Input 
-                                id="college" 
-                                placeholder="e.g., MIT" 
-                                value={collegeFilter}
-                                onChange={(e) => setCollegeFilter(e.target.value)}
-                            />
-                        </div>
-                        <div>
-                            <Label htmlFor="tech-stack">Tech Stack (comma-separated)</Label>
-                            <Input 
-                                id="tech-stack" 
-                                placeholder="e.g., React, Python" 
-                                value={techStackFilter}
-                                onChange={(e) => setTechStackFilter(e.target.value)}
-                            />
-                        </div>
-                         <SheetClose asChild>
-                            <Button className="w-full" onClick={handleApplyFilters}>Apply Filters</Button>
-                        </SheetClose>
-                    </div>
-                </SheetContent>
-            </Sheet>
+                    </ScrollArea>
+                    <DialogFooter>
+                        <DialogClose asChild>
+                            <Button onClick={handleApplyFilters}>Apply Filters</Button>
+                        </DialogClose>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
 
         <div className="w-full max-w-sm flex flex-col items-center space-y-6">
@@ -384,3 +389,5 @@ export default function SwipePage() {
     </main>
   );
 }
+
+    
