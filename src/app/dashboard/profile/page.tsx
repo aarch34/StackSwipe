@@ -15,6 +15,19 @@ import type { UserProfile } from '@/lib/data';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { User as UserIcon } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+
+const networkingGoalOptions = [
+    'Hackathon Teammate',
+    'Referrals',
+    'Networking',
+    'Looking for a Mentor / Mentee',
+    'Looking for a Collaborator / Partner',
+    'Looking to Hire / Get Hired',
+    'Looking for Friends / Peers in my Field',
+    'Looking to Learn or Teach Something',
+    'Project / Startup Networking',
+];
 
 export default function ProfilePage() {
     const { profile: initialProfile, updateProfile, loading } = useAuth();
@@ -83,8 +96,19 @@ export default function ProfilePage() {
         setProfile(prev => prev ? ({ ...prev, links: { ...prev.links, [name]: value } }) : null);
     };
     
-    const handleArrayChange = (field: 'techStack' | 'interests' | 'networkingTags', value: string) => {
+    const handleArrayChange = (field: 'techStack' | 'interests', value: string) => {
         setProfile(prev => prev ? ({ ...prev, [field]: value.split(',').map(item => item.trim()) }) : null);
+    };
+    
+    const handleNetworkingTagChange = (tag: string, checked: boolean) => {
+        setProfile(prev => {
+            if (!prev) return null;
+            const currentTags = prev.networkingTags || [];
+            const newTags = checked
+                ? [...currentTags, tag]
+                : currentTags.filter(t => t !== tag);
+            return { ...prev, networkingTags: newTags };
+        });
     };
 
     const handleSelectChange = (field: 'gender' | 'experienceLevel', value: string) => {
@@ -262,13 +286,24 @@ export default function ProfilePage() {
                         </div>
                         
                         <div className="space-y-2">
-                            <Label htmlFor="networkingTags">Networking Goals (comma-separated)</Label>
-                            <Input 
-                                id="networkingTags" 
-                                name="networkingTags" 
-                                value={profile.networkingTags.join(', ')} 
-                                onChange={(e) => handleArrayChange('networkingTags', e.target.value)}
-                            />
+                            <Label>Networking Goals</Label>
+                             <div className="space-y-2 rounded-md border p-4">
+                                {networkingGoalOptions.map((goal) => (
+                                    <div key={goal} className="flex items-center space-x-2">
+                                        <Checkbox
+                                            id={`goal-${goal.replace(/\s/g, '-')}`}
+                                            checked={profile.networkingTags.includes(goal)}
+                                            onCheckedChange={(checked) => handleNetworkingTagChange(goal, !!checked)}
+                                        />
+                                        <label
+                                            htmlFor={`goal-${goal.replace(/\s/g, '-')}`}
+                                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                        >
+                                            {goal}
+                                        </label>
+                                    </div>
+                                ))}
+                            </div>
                             <div className="flex flex-wrap gap-2 pt-2">
                                 {profile.networkingTags.filter(Boolean).map((tag) => (
                                     <Badge key={tag} variant="outline">{tag}</Badge>
@@ -284,4 +319,5 @@ export default function ProfilePage() {
             </Card>
         </main>
     );
-}
+
+    

@@ -18,6 +18,7 @@ import type { UserProfile } from '@/lib/data';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { User as UserIcon } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
 
 const profileStepSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
@@ -46,9 +47,24 @@ const socialStepSchema = z.object({
     linkedin: z.string().url({ message: 'Please enter a valid URL.' }).optional().or(z.literal('')),
 });
 
+const networkingGoalOptions = [
+    { id: 'hackathon-teammate', label: 'Hackathon Teammate' },
+    { id: 'referrals', label: 'Referrals' },
+    { id: 'networking', label: 'Networking' },
+    { id: 'mentor-mentee', label: 'Looking for a Mentor / Mentee' },
+    { id: 'collaborator-partner', label: 'Looking for a Collaborator / Partner' },
+    { id: 'hire-get-hired', label: 'Looking to Hire / Get Hired' },
+    { id: 'friends-peers', label: 'Looking for Friends / Peers in my Field' },
+    { id: 'learn-teach', label: 'Looking to Learn or Teach Something' },
+    { id: 'project-startup', label: 'Project / Startup Networking' },
+];
+
 const goalsStepSchema = z.object({
-  networkingTags: z.string().min(2, { message: 'Please add at least one goal.' }),
+  networkingTags: z.array(z.string()).refine(value => value.some(item => item), {
+    message: 'You have to select at least one item.',
+  }),
 });
+
 
 const allSteps = [
     { id: 'Step 1', name: 'Profile Basics', fields: ['name', 'headline', 'bio', 'location', 'age', 'gender'], schema: profileStepSchema },
@@ -84,7 +100,7 @@ export default function OnboardingPage() {
             college: '',
             techStack: '',
             interests: '',
-            networkingTags: '',
+            networkingTags: [],
             github: '',
             linkedin: '',
         },
@@ -137,7 +153,7 @@ export default function OnboardingPage() {
             college: data.college || '',
             techStack: (data.techStack || '').split(',').map(item => item.trim()).filter(Boolean),
             interests: (data.interests || '').split(',').map(item => item.trim()).filter(Boolean),
-            networkingTags: (data.networkingTags || '').split(',').map(item => item.trim()).filter(Boolean),
+            networkingTags: data.networkingTags.filter(Boolean),
             links: {
                 github: data.github || '',
                 linkedin: data.linkedin || '',
@@ -344,15 +360,56 @@ export default function OnboardingPage() {
                                 </>
                             )}
                              {step === 4 && (
-                                <>
-                                    <FormField control={form.control} name="networkingTags" render={({ field }) => (
+                                <FormField
+                                    control={form.control}
+                                    name="networkingTags"
+                                    render={() => (
                                         <FormItem>
-                                            <FormLabel>Networking Goals (comma-separated)</FormLabel>
-                                            <FormControl><Input {...field} placeholder="e.g., Mentor, Teammate, Referrals" /></FormControl>
+                                            <div className="mb-4">
+                                                <FormLabel className="text-base">Networking Goals</FormLabel>
+                                                <FormDescription>
+                                                    Select what you're looking for on StackSwipe.
+                                                </FormDescription>
+                                            </div>
+                                            <div className="space-y-2">
+                                            {networkingGoalOptions.map((item) => (
+                                                <FormField
+                                                    key={item.id}
+                                                    control={form.control}
+                                                    name="networkingTags"
+                                                    render={({ field }) => {
+                                                        return (
+                                                            <FormItem
+                                                                key={item.id}
+                                                                className="flex flex-row items-start space-x-3 space-y-0"
+                                                            >
+                                                                <FormControl>
+                                                                    <Checkbox
+                                                                        checked={field.value?.includes(item.label)}
+                                                                        onCheckedChange={(checked) => {
+                                                                            return checked
+                                                                                ? field.onChange([...(field.value || []), item.label])
+                                                                                : field.onChange(
+                                                                                    field.value?.filter(
+                                                                                        (value) => value !== item.label
+                                                                                    )
+                                                                                )
+                                                                        }}
+                                                                    />
+                                                                </FormControl>
+                                                                <FormLabel className="font-normal">
+                                                                    {item.label}
+                                                                </FormLabel>
+                                                            </FormItem>
+                                                        )
+                                                    }}
+                                                />
+                                            ))}
+                                            </div>
                                             <FormMessage />
                                         </FormItem>
-                                    )} />
-                                </>
+                                    )}
+                                />
                             )}
                             <div className="flex justify-between pt-4">
                                 {step > 0 ? (
@@ -374,4 +431,5 @@ export default function OnboardingPage() {
             </Card>
         </div>
     );
-}
+
+    
