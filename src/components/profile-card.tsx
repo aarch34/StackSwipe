@@ -12,17 +12,21 @@ interface ProfileCardProps {
 }
 
 export function ProfileCard({ profile }: ProfileCardProps) {
-  const photo = profile.photoURL || `https://picsum.photos/seed/${profile.id}/600/800`;
+  const photo = profile.photoURL;
     
   return (
     <Card className="w-full max-w-sm rounded-2xl shadow-xl transform transition-all duration-300 hover:scale-105 hover:shadow-2xl h-full overflow-hidden">
         <div className="relative h-full w-full">
-             <Image 
-                src={photo}
-                alt={profile.name}
-                fill
-                className="object-cover"
-            />
+            {photo ? (
+                <Image 
+                    src={photo}
+                    alt={profile.name}
+                    fill
+                    className="object-cover"
+                />
+            ) : (
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-gray-900 to-gray-800" />
+            )}
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent" />
 
             <div className="absolute inset-0 flex flex-col justify-end p-6 text-white">
@@ -41,12 +45,16 @@ export function ProfileCard({ profile }: ProfileCardProps) {
                     </div>
                 </CardContent>
                 <CardFooter className="p-0 mt-4 flex items-center gap-4">
-                    <Link href={profile.links.github || '#'} target="_blank" rel="noopener noreferrer" className="text-neutral-300 hover:text-white">
-                        <Github className="h-6 w-6" />
-                    </Link>
-                    <Link href={profile.links.linkedin || '#'} target="_blank" rel="noopener noreferrer" className="text-neutral-300 hover:text-white">
-                        <Linkedin className="h-6 w-6" />
-                    </Link>
+                    {profile.links?.github && (
+                        <Link href={profile.links.github} target="_blank" rel="noopener noreferrer" className="text-neutral-300 hover:text-white">
+                            <Github className="h-6 w-6" />
+                        </Link>
+                    )}
+                    {profile.links?.linkedin && (
+                        <Link href={profile.links.linkedin} target="_blank" rel="noopener noreferrer" className="text-neutral-300 hover:text-white">
+                            <Linkedin className="h-6 w-6" />
+                        </Link>
+                    )}
                 </CardFooter>
             </div>
         </div>
