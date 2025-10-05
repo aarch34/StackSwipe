@@ -190,7 +190,7 @@ export default function MessagesPage() {
                             <h2 className="text-lg font-semibold">{otherUser.name}</h2>
                         </div>
                     </DialogTrigger>
-                    <DialogContent className="max-w-md p-0">
+                    <DialogContent className="max-w-sm p-0">
                         <DialogHeader className="sr-only">
                           <DialogTitle>User Profile: {otherUser.name}</DialogTitle>
                           <DialogDescription>
