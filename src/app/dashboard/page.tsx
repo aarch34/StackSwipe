@@ -18,7 +18,16 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+  SheetDescription,
+  SheetFooter,
+  SheetClose,
+} from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
 import { db } from '@/lib/firebase';
@@ -235,106 +244,117 @@ export default function SwipePage() {
     <main className="container mx-auto p-4 md:p-8">
       <div className="flex flex-col items-center justify-start space-y-6">
         <div className="w-full max-w-sm flex justify-end">
-            <Dialog>
-                <DialogTrigger asChild>
-                    <Button variant="outline">
-                        <SlidersHorizontal className="mr-2 h-4 w-4" /> Filters
-                    </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-[425px]">
-                    <DialogHeader>
-                        <DialogTitle className="font-headline flex items-center gap-2">
-                            <SlidersHorizontal/> Filters
-                        </DialogTitle>
-                        <DialogDescription>
-                            Refine your search to find the perfect match. Click apply when you're done.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <ScrollArea className="max-h-[60vh] p-4">
-                        <div className="space-y-4">
-                            <div>
-                                <Label htmlFor="location">Location</Label>
-                                <Input 
-                                    id="location" 
-                                    placeholder="e.g., San Francisco, CA" 
-                                    value={locationFilter}
-                                    onChange={(e) => setLocationFilter(e.target.value)}
-                                />
-                            </div>
-                            <div>
-                                <Label htmlFor="experienceLevel">Experience Level</Label>
-                                <Select value={experienceLevelFilter} onValueChange={setExperienceLevelFilter}>
-                                    <SelectTrigger id="experienceLevel">
-                                        <SelectValue placeholder="Any experience level" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="any">Any</SelectItem>
-                                        <SelectItem value="Intern">Intern</SelectItem>
-                                        <SelectItem value="Junior">Junior</SelectItem>
-                                        <SelectItem value="Mid-level">Mid-level</SelectItem>
-                                        <SelectItem value="Senior">Senior</SelectItem>
-                                        <SelectItem value="Lead">Lead</SelectItem>
-                                        <SelectItem value="Manager">Manager</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            <div>
-                                <Label>Networking Goals</Label>
-                                 <div className="space-y-2 rounded-md border p-4">
-                                    {networkingGoalOptions.map((goal) => (
-                                        <div key={goal} className="flex items-center space-x-2">
-                                            <Checkbox
-                                                id={`filter-goal-${goal.replace(/\s/g, '-')}`}
-                                                checked={networkingGoalsFilter.includes(goal)}
-                                                onCheckedChange={(checked) => handleNetworkingTagChange(goal, !!checked)}
-                                                className="flex-shrink-0"
-                                            />
-                                            <label
-                                                htmlFor={`filter-goal-${goal.replace(/\s/g, '-')}`}
-                                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                                            >
-                                                {goal}
-                                            </label>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                            <div>
-                                <Label htmlFor="company">Company</Label>
-                                <Input 
-                                    id="company" 
-                                    placeholder="e.g., Google" 
-                                    value={companyFilter}
-                                    onChange={(e) => setCompanyFilter(e.target.value)}
-                                />
-                            </div>
-                            <div>
-                                <Label htmlFor="college">College</Label>
-                                <Input 
-                                    id="college" 
-                                    placeholder="e.g., MIT" 
-                                    value={collegeFilter}
-                                    onChange={(e) => setCollegeFilter(e.target.value)}
-                                />
-                            </div>
-                            <div>
-                                <Label htmlFor="tech-stack">Tech Stack (comma-separated)</Label>
-                                <Input 
-                                    id="tech-stack" 
-                                    placeholder="e.g., React, Python" 
-                                    value={techStackFilter}
-                                    onChange={(e) => setTechStackFilter(e.target.value)}
-                                />
-                            </div>
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="outline">
+                <SlidersHorizontal className="mr-2 h-4 w-4" /> Filters
+              </Button>
+            </SheetTrigger>
+            <SheetContent className="w-full sm:max-w-md p-0">
+              <SheetHeader className="p-6">
+                <SheetTitle className="font-headline flex items-center gap-2">
+                  <SlidersHorizontal /> Filters
+                </SheetTitle>
+                <SheetDescription>
+                  Refine your search to find the perfect match. Click apply when
+                  you're done.
+                </SheetDescription>
+              </SheetHeader>
+              <ScrollArea className="h-[calc(100vh-140px)]">
+                <div className="space-y-4 p-6">
+                  <div>
+                    <Label htmlFor="location">Location</Label>
+                    <Input
+                      id="location"
+                      placeholder="e.g., San Francisco, CA"
+                      value={locationFilter}
+                      onChange={(e) => setLocationFilter(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="experienceLevel">Experience Level</Label>
+                    <Select
+                      value={experienceLevelFilter}
+                      onValueChange={setExperienceLevelFilter}
+                    >
+                      <SelectTrigger id="experienceLevel">
+                        <SelectValue placeholder="Any experience level" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="any">Any</SelectItem>
+                        <SelectItem value="Intern">Intern</SelectItem>
+                        <SelectItem value="Junior">Junior</SelectItem>
+                        <SelectItem value="Mid-level">Mid-level</SelectItem>
+                        <SelectItem value="Senior">Senior</SelectItem>
+                        <SelectItem value="Lead">Lead</SelectItem>
+                        <SelectItem value="Manager">Manager</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>Networking Goals</Label>
+                    <div className="space-y-2 rounded-md border p-4">
+                      {networkingGoalOptions.map((goal) => (
+                        <div
+                          key={goal}
+                          className="flex items-center space-x-2"
+                        >
+                          <Checkbox
+                            id={`filter-goal-${goal.replace(/\s/g, '-')}`}
+                            checked={networkingGoalsFilter.includes(goal)}
+                            onCheckedChange={(checked) =>
+                              handleNetworkingTagChange(goal, !!checked)
+                            }
+                            className="flex-shrink-0"
+                          />
+                          <label
+                            htmlFor={`filter-goal-${goal.replace(/\s/g, '-')}`}
+                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                          >
+                            {goal}
+                          </label>
                         </div>
-                    </ScrollArea>
-                    <DialogFooter>
-                        <DialogClose asChild>
-                            <Button onClick={handleApplyFilters}>Apply Filters</Button>
-                        </DialogClose>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <Label htmlFor="company">Company</Label>
+                    <Input
+                      id="company"
+                      placeholder="e.g., Google"
+                      value={companyFilter}
+                      onChange={(e) => setCompanyFilter(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="college">College</Label>
+                    <Input
+                      id="college"
+                      placeholder="e.g., MIT"
+                      value={collegeFilter}
+                      onChange={(e) => setCollegeFilter(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="tech-stack">
+                      Tech Stack (comma-separated)
+                    </Label>
+                    <Input
+                      id="tech-stack"
+                      placeholder="e.g., React, Python"
+                      value={techStackFilter}
+                      onChange={(e) => setTechStackFilter(e.target.value)}
+                    />
+                  </div>
+                </div>
+              </ScrollArea>
+              <SheetFooter className="p-6 border-t">
+                <SheetClose asChild>
+                  <Button onClick={handleApplyFilters}>Apply Filters</Button>
+                </SheetClose>
+              </SheetFooter>
+            </SheetContent>
+          </Sheet>
         </div>
 
         <div className="w-full max-w-sm flex flex-col items-center space-y-6">
