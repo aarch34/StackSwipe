@@ -285,6 +285,7 @@ export default function SwipePage() {
                                             id={`filter-goal-${goal.replace(/\s/g, '-')}`}
                                             checked={networkingGoalsFilter.includes(goal)}
                                             onCheckedChange={(checked) => handleNetworkingTagChange(goal, !!checked)}
+                                            className="flex-shrink-0"
                                         />
                                         <label
                                             htmlFor={`filter-goal-${goal.replace(/\s/g, '-')}`}
