@@ -248,7 +248,7 @@ export default function SwipePage() {
                 <SlidersHorizontal className="mr-2 h-4 w-4" /> Filters
               </Button>
             </SheetTrigger>
-            <SheetContent className="w-full sm:max-w-md p-0">
+            <SheetContent className="w-full sm:max-w-md p-0 flex flex-col">
               <SheetHeader className="p-6">
                 <SheetTitle className="font-headline flex items-center gap-2">
                   <SlidersHorizontal /> Filters
@@ -258,7 +258,7 @@ export default function SwipePage() {
                   you're done.
                 </SheetDescription>
               </SheetHeader>
-              <ScrollArea className="h-[calc(100vh-140px)]">
+              <ScrollArea className="flex-1">
                 <div className="space-y-4 p-6">
                   <div>
                     <Label htmlFor="location">Location</Label>
@@ -407,6 +407,3 @@ export default function SwipePage() {
     </main>
   );
 }
-
-    
-    
