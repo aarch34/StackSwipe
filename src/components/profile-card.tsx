@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-import { Briefcase, Building, Code, Github, GraduationCap, Heart, Linkedin, MapPin } from 'lucide-react';
+import { Briefcase, Code, Github, GraduationCap, Heart, Linkedin, MapPin } from 'lucide-react';
 import { type UserProfile } from '@/lib/data';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
