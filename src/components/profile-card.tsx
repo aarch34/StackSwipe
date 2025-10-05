@@ -1,12 +1,10 @@
 
 'use client';
 import Link from 'next/link';
-import { Github, Linkedin, Briefcase, Code, Sparkles as InterestIcon, MapPin, Building, GraduationCap } from 'lucide-react';
+import { Github, Linkedin } from 'lucide-react';
 import { type UserProfile } from '@/lib/data';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
-import { cn } from '@/lib/utils';
 import Image from 'next/image';
 
 interface ProfileCardProps {
@@ -34,6 +32,13 @@ export function ProfileCard({ profile }: ProfileCardProps) {
                 </CardHeader>
                 <CardContent className="p-0 mt-4">
                      <p className="text-sm text-neutral-200 line-clamp-3">{profile.bio}</p>
+                     <div className="flex flex-wrap gap-2 mt-4">
+                        {profile.networkingTags?.map((tag) => (
+                            <Badge key={tag} variant="secondary" className="bg-white/20 text-white border-transparent backdrop-blur-sm">
+                                {tag}
+                            </Badge>
+                        ))}
+                    </div>
                 </CardContent>
                 <CardFooter className="p-0 mt-4 flex items-center gap-4">
                     <Link href={profile.links.github || '#'} target="_blank" rel="noopener noreferrer" className="text-neutral-300 hover:text-white">
