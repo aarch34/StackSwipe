@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -14,8 +13,9 @@ import { Skeleton } from '@/components/ui/skeleton';
 import type { UserProfile } from '@/lib/data';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { User as UserIcon } from 'lucide-react';
+import { User as UserIcon, Upload } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
+import { uploadToCloudinary } from '@/lib/cloudinary'; // Add this import
 
 const networkingGoalOptions = [
     'Hackathon Teammate',
@@ -30,6 +30,7 @@ const networkingGoalOptions = [
 export default function ProfilePage() {
     const { profile: initialProfile, updateProfile, loading } = useAuth();
     const [profile, setProfile] = useState<UserProfile | null>(null);
+    const [uploading, setUploading] = useState(false); // Add loading state
     const { toast } = useToast();
 
     useEffect(() => {
@@ -113,14 +114,33 @@ export default function ProfilePage() {
          setProfile(prev => prev ? ({ ...prev, [field]: value }) : null);
     }
 
-    const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // REPLACE the old handlePhotoUpload with this Cloudinary version
+    const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setProfile(prev => prev ? { ...prev, photoURL: reader.result as string } : null);
-            };
-            reader.readAsDataURL(file);
+        if (!file) return;
+
+        try {
+            setUploading(true);
+            
+            // Upload to Cloudinary
+            const imageUrl = await uploadToCloudinary(file);
+            
+            // Update profile with new image URL
+            setProfile(prev => prev ? { ...prev, photoURL: imageUrl } : null);
+            
+            toast({
+                title: 'Image uploaded successfully!',
+                description: 'Your profile photo has been updated.',
+            });
+        } catch (error) {
+            console.error('Upload failed:', error);
+            toast({
+                title: 'Upload failed',
+                description: 'Could not upload your image. Please try again.',
+                variant: 'destructive',
+            });
+        } finally {
+            setUploading(false);
         }
     };
 
@@ -159,14 +179,24 @@ export default function ProfilePage() {
                                     <UserIcon className="w-16 h-16" />
                                 </AvatarFallback>
                             </Avatar>
-                            <Input
-                                type="file"
-                                accept="image/*"
-                                onChange={handlePhotoUpload}
-                                className="max-w-xs text-sm"
-                            />
+                            <div className="flex items-center gap-2">
+                                <Input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={handlePhotoUpload}
+                                    className="max-w-xs text-sm"
+                                    disabled={uploading}
+                                />
+                                {uploading && (
+                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                        <Upload className="w-4 h-4 animate-spin" />
+                                        Uploading...
+                                    </div>
+                                )}
+                            </div>
                         </div>
 
+                        {/* Rest of your form remains the same */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-2">
                                 <Label htmlFor="name">Name</Label>
@@ -310,14 +340,13 @@ export default function ProfilePage() {
                         </div>
 
                         <div className="flex justify-end">
-                            <Button type="submit">Save Changes</Button>
+                            <Button type="submit" disabled={uploading}>
+                                {uploading ? 'Uploading...' : 'Save Changes'}
+                            </Button>
                         </div>
                     </form>
                 </CardContent>
             </Card>
         </main>
     );
-
-    
-
-    
+}
