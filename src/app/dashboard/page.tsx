@@ -1,10 +1,8 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
 import { Heart, SlidersHorizontal, Undo, X as XIcon } from 'lucide-react';
 import { UserProfile } from '@/lib/data';
-import { getAllUsers } from '@/lib/users';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
 import { ProfileCard } from '@/components/profile-card';
@@ -30,12 +28,10 @@ import {
 } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
-import { db } from '@/lib/firebase';
-import { addDoc, collection, getDocs, query, where, serverTimestamp, doc, setDoc } from 'firebase/firestore';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
-
+import { supabase } from '@/lib/supabase';
 
 const SWIPE_LIMIT = 10;
 const networkingGoalOptions = [
@@ -47,7 +43,6 @@ const networkingGoalOptions = [
     'Looking to Learn or Teach Something',
     'Project / Startup Networking',
 ];
-
 
 export default function SwipePage() {
   const { user } = useAuth();
@@ -67,21 +62,77 @@ export default function SwipePage() {
   const [collegeFilter, setCollegeFilter] = useState('');
   const [networkingGoalsFilter, setNetworkingGoalsFilter] = useState<string[]>([]);
 
-
   useEffect(() => {
     async function fetchProfiles() {
       if (!user) return;
+      
       try {
         setLoading(true);
-        const swipesQuery = query(collection(db, 'swipes'), where('swiperId', '==', user.uid));
-        const swipesSnapshot = await getDocs(swipesQuery);
-        const alreadySwipedIds = new Set(swipesSnapshot.docs.map(doc => doc.data().swipedId));
+        
+        // Get current user's internal ID
+        const { data: currentUserData } = await supabase
+          .from('users')
+          .select('id')
+          .eq('firebase_uid', user.uid)
+          .single();
+
+        if (!currentUserData) {
+          console.error('Current user not found in Supabase');
+          return;
+        }
+
+        // Get already swiped user IDs
+        const { data: swipesData } = await supabase
+          .from('swipes')
+          .select('swiped_id')
+          .eq('swiper_id', currentUserData.id);
+
+        const alreadySwipedIds = new Set(
+          swipesData?.map(swipe => swipe.swiped_id) || []
+        );
         setSwipedIds(alreadySwipedIds);
         
-        const profiles = await getAllUsers();
-        const availableProfiles = profiles.filter(p => p.id !== user.uid && !alreadySwipedIds.has(p.id));
-        setAllProfiles(availableProfiles);
-        setFilteredProfiles(availableProfiles);
+        // Get all user profiles except current user and already swiped
+        const { data: profiles, error } = await supabase
+          .from('users')
+          .select('*')
+          .neq('firebase_uid', user.uid);
+
+        if (error) {
+          console.error('Error fetching profiles:', error);
+          toast({
+            title: 'Error',
+            description: 'Could not load profiles. Please try again later.',
+            variant: 'destructive',
+          });
+          return;
+        }
+
+        // Transform Supabase data to match UserProfile interface
+        const transformedProfiles: UserProfile[] = profiles
+          .filter(p => !alreadySwipedIds.has(p.id))
+          .map(p => ({
+            id: p.id,
+            name: p.name,
+            age: p.age,
+            bio: p.bio,
+            headline: p.headline,
+            jobTitle: p.job_title,
+            company: p.company,
+            experienceLevel: p.experience_level,
+            location: p.location,
+            photoURL: p.photo_url,
+            techStack: p.tech_stack || [],
+            interests: p.interests || [],
+            networkingTags: p.networking_tags || [],
+            college: p.college,
+            currentWork: p.current_work,
+            links: p.links || {},
+            email: p.email
+          }));
+
+        setAllProfiles(transformedProfiles);
+        setFilteredProfiles(transformedProfiles);
 
       } catch (error) {
         console.error("Failed to fetch profiles:", error);
@@ -94,6 +145,7 @@ export default function SwipePage() {
         setLoading(false);
       }
     }
+    
     fetchProfiles();
   }, [user, toast]);
   
@@ -140,37 +192,11 @@ export default function SwipePage() {
     }
     
     setFilteredProfiles(profiles);
-    setCurrentIndex(0); // Reset swipe index to start from the beginning of the filtered list
+    setCurrentIndex(0);
     toast({
         title: 'Filters Applied',
         description: `Showing ${profiles.length} matching profiles.`,
     });
-  };
-
-  const checkForMatch = async (swipedProfile: UserProfile) => {
-    if (!user) return;
-
-    const q = query(
-      collection(db, "swipes"),
-      where("swiperId", "==", swipedProfile.id),
-      where("swipedId", "==", user.uid),
-      where("action", "==", "like")
-    );
-
-    const querySnapshot = await getDocs(q);
-    if (!querySnapshot.empty) {
-      console.log(`It's a match with ${swipedProfile.name}!`);
-      toast({
-        title: `It's a match!`,
-        description: `You and ${swipedProfile.name} have liked each other.`,
-      });
-      const matchId = [user.uid, swipedProfile.id].sort().join('_');
-      await setDoc(doc(db, "matches", matchId), {
-        id: matchId,
-        userIds: [user.uid, swipedProfile.id],
-        matchedAt: serverTimestamp(),
-      });
-    }
   };
 
   const handleSwipe = async (action: 'like' | 'dislike') => {
@@ -185,28 +211,95 @@ export default function SwipePage() {
     }
     
     const swipedProfile = filteredProfiles[currentIndex];
-    
     setSwipeAnimation(action === 'like' ? 'right' : 'left');
     
     try {
-        await addDoc(collection(db, 'swipes'), {
-            swiperId: user.uid,
-            swipedId: swipedProfile.id,
-            action: action,
-            timestamp: serverTimestamp(),
-        });
-        
-        setSwipedIds(prev => new Set(prev).add(swipedProfile.id));
+      // Get current user's internal ID
+      const { data: currentUserData } = await supabase
+        .from('users')
+        .select('id')
+        .eq('firebase_uid', user.uid)
+        .single();
 
-        if (action === 'like') {
-            await checkForMatch(swipedProfile);
+      if (!currentUserData) {
+        throw new Error('Current user not found');
+      }
+
+      console.log('Recording swipe:', {
+        swiper_id: currentUserData.id,
+        swiped_id: swipedProfile.id,
+        direction: action === 'like' ? 'right' : 'left'
+      });
+
+      // Record the swipe
+      const { error } = await supabase
+        .from('swipes')
+        .insert({
+          swiper_id: currentUserData.id,
+          swiped_id: swipedProfile.id,
+          direction: action === 'like' ? 'right' : 'left'
+        });
+
+      // Handle duplicate swipe error gracefully
+      if (error) {
+        if (error.code === '23505') { // Unique constraint violation
+          console.log('User already swiped on this profile');
+          // Continue with the UI flow even if swipe already exists
+        } else {
+          console.error('Unexpected error:', error);
+          throw error;
         }
+      }
+
+      setSwipedIds(prev => new Set(prev).add(swipedProfile.id));
+
+      if (action === 'like') {
+        // Check for mutual match
+        console.log('Checking for mutual match...');
+        const { data: mutualSwipe } = await supabase
+          .from('swipes')
+          .select('*')
+          .eq('swiper_id', swipedProfile.id)
+          .eq('swiped_id', currentUserData.id)
+          .eq('direction', 'right')
+          .single();
+
+        if (mutualSwipe) {
+          console.log('Mutual match found! Creating match...');
+          
+          toast({
+            title: `It's a match!`,
+            description: `You and ${swipedProfile.name} have liked each other.`,
+          });
+
+          // Create match - handle potential duplicates
+          const { data: matchData, error: matchError } = await supabase
+            .from('matches')
+            .insert({
+              user_ids: [currentUserData.id, swipedProfile.id]
+            })
+            .select()
+            .single();
+
+          if (matchError && matchError.code !== '23505') {
+            console.error('Error creating match:', matchError);
+          } else if (!matchError) {
+            console.log('Match created successfully:', matchData);
+          }
+        } else {
+          console.log('No mutual match found yet');
+        }
+      }
 
     } catch (error) {
-         console.error("Error recording swipe:", error);
-         toast({ title: 'Error', description: 'Could not save your swipe.', variant: 'destructive'});
-         setSwipeAnimation('');
-         return;
+      console.error("Error in handleSwipe:", error);
+      toast({ 
+        title: 'Error', 
+        description: 'Could not save your swipe.', 
+        variant: 'destructive'
+      });
+      setSwipeAnimation('');
+      return;
     }
 
     setTimeout(() => {
@@ -236,7 +329,6 @@ export default function SwipePage() {
       swipeAnimation === 'left' ? 'animate-swipe-out-left' : 
       swipeAnimation === 'right' ? 'animate-swipe-out-right' : 
       '';
-
 
   return (
     <main className="container mx-auto p-4 md:p-8">

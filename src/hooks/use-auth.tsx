@@ -1,14 +1,11 @@
-
 'use client';
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, User } from 'firebase/auth';
-import { collection, doc, getDoc, onSnapshot, query, setDoc, where, getDocs } from 'firebase/firestore';
-import { firebaseApp, db } from '@/lib/firebase';
+import { firebaseApp } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 import type { UserProfile, Match } from '@/lib/data';
-import { errorEmitter } from '@/lib/error-emitter';
-import { FirestorePermissionError } from '@/lib/errors';
+import { supabase } from '@/lib/supabase';
 
 interface AuthContextType {
     user: User | null;
@@ -38,12 +35,47 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
             setLoading(true);
             setUser(user);
+            
             if (user) {
-                const profileDoc = await getDoc(doc(db, 'users', user.uid));
-                if (profileDoc.exists()) {
-                    setProfile(profileDoc.data() as UserProfile);
-                    setHasProfile(true);
-                } else {
+                try {
+                    // Get user profile from Supabase
+                    const { data, error } = await supabase
+                        .from('users')
+                        .select('*')
+                        .eq('firebase_uid', user.uid)
+                        .single();
+
+                    if (data && !error) {
+                        // Transform Supabase data to UserProfile
+                        const transformedProfile: UserProfile = {
+                            id: data.id,
+                            name: data.name,
+                            age: data.age,
+                            bio: data.bio,
+                            headline: data.headline,
+                            jobTitle: data.job_title,
+                            company: data.company,
+                            experienceLevel: data.experience_level,
+                            location: data.location,
+                            photoURL: data.photo_url,
+                            techStack: data.tech_stack || [],
+                            interests: data.interests || [],
+                            networkingTags: data.networking_tags || [],
+                            college: data.college,
+                            currentWork: data.current_work,
+                            links: data.links || {},
+                            email: data.email,
+                            gender: data.gender
+                        };
+                        
+                        setProfile(transformedProfile);
+                        setHasProfile(true);
+                    } else {
+                        setProfile(null);
+                        setHasProfile(false);
+                    }
+                } catch (error) {
+                    console.error('Error fetching profile:', error);
                     setProfile(null);
                     setHasProfile(false);
                 }
@@ -58,42 +90,113 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         return () => unsubscribeAuth();
     }, [auth]);
 
-    useEffect(() => {
-        if (!user || !profile) {
-            setMatches([]);
-            return;
-        };
+// Load matches when user and profile are available
+useEffect(() => {
+    if (!user || !profile) {
+        setMatches([]);
+        return;
+    }
 
-        const q = query(collection(db, "matches"), where("userIds", "array-contains", user.uid));
-        
-        const unsubscribeMatches = onSnapshot(q, async (querySnapshot) => {
-            const userMatchesPromises = querySnapshot.docs.map(async (docSnapshot) => {
-                const matchData = docSnapshot.data();
-                const otherUserId = matchData.userIds.find((id: string) => id !== user.uid);
-                
-                if (!otherUserId) return null;
+    const loadMatches = async () => {
+        try {
+            // Get user's internal Supabase ID
+            const { data: userData } = await supabase
+                .from('users')
+                .select('id')
+                .eq('firebase_uid', user.uid)
+                .single();
 
-                const otherUserProfileDoc = await getDoc(doc(db, 'users', otherUserId));
-                
-                if (!otherUserProfileDoc.exists()) return null;
+            if (!userData) {
+                console.log('Current user not found in Supabase');
+                return;
+            }
 
-                const otherUserProfile = otherUserProfileDoc.data() as UserProfile;
+            console.log('Current user Supabase ID:', userData.id);
 
-                return { 
-                    id: docSnapshot.id, 
-                    ...matchData,
-                    users: [profile, otherUserProfile]
-                } as Match;
-            });
+            // Get matches where user's SUPABASE ID is involved
+            const { data: matchesData, error } = await supabase
+                .from('matches')
+                .select('*')
+                .contains('user_ids', [userData.id]);
+
+            console.log('Raw matches from database:', matchesData);
+
+            if (error) {
+                console.error('Error loading matches:', error);
+                return;
+            }
+
+            // Get user profiles for each match
+            const transformedMatches: Match[] = [];
             
-            const resolvedMatches = (await Promise.all(userMatchesPromises)).filter(Boolean) as Match[];
-            setMatches(resolvedMatches);
-        });
+            for (const match of matchesData || []) {
+                console.log('Processing match:', match);
+                
+                // Find the OTHER user's Supabase ID
+                const otherUserId = match.user_ids.find((id: string) => id !== userData.id);
+                console.log('Other user ID:', otherUserId);
+                
+                if (otherUserId) {
+                    const { data: otherUserData } = await supabase
+                        .from('users')
+                        .select('*')
+                        .eq('id', otherUserId)
+                        .single();
 
-        return () => unsubscribeMatches();
+                    console.log('Other user data:', otherUserData);
 
-    }, [user, profile]);
+                    if (otherUserData) {
+                        const otherUserProfile: UserProfile = {
+                            id: otherUserData.firebase_uid, // Use Firebase UID for compatibility
+                            name: otherUserData.name,
+                            age: otherUserData.age,
+                            bio: otherUserData.bio,
+                            headline: otherUserData.headline,
+                            jobTitle: otherUserData.job_title,
+                            company: otherUserData.company,
+                            experienceLevel: otherUserData.experience_level,
+                            location: otherUserData.location,
+                            photoURL: otherUserData.photo_url,
+                            techStack: otherUserData.tech_stack || [],
+                            interests: otherUserData.interests || [],
+                            networkingTags: otherUserData.networking_tags || [],
+                            college: otherUserData.college,
+                            currentWork: otherUserData.current_work,
+                            links: otherUserData.links || {},
+                            email: otherUserData.email,
+                            gender: otherUserData.gender
+                        };
 
+                        // THE KEY FIX: Include both users with proper Firebase UIDs
+                        transformedMatches.push({
+                            id: match.id,
+                            userIds: [user.uid, otherUserData.firebase_uid], // Use Firebase UIDs here
+                            users: [
+                                {
+                                    ...profile,
+                                    id: user.uid // Make sure current user profile uses Firebase UID
+                                }, 
+                                otherUserProfile
+                            ],
+                            createdAt: match.created_at
+                        });
+
+                        console.log('Added match:', otherUserProfile.name);
+                    }
+                }
+            }
+
+            console.log('Final transformed matches:', transformedMatches);
+            setMatches(transformedMatches);
+        } catch (error) {
+            console.error('Error loading matches:', error);
+        }
+    };
+
+    loadMatches();
+}, [user, profile]);
+
+   
 
     const login = (email: string, pass: string) => {
         return signInWithEmailAndPassword(auth, email, pass);
@@ -105,25 +208,106 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
     
     const updateProfile = async (newProfile: UserProfile) => {
-        if (user) {
-            const profileData = JSON.parse(JSON.stringify(newProfile));
-            const docRef = doc(db, 'users', user.uid);
-            
-            await setDoc(docRef, profileData)
-              .then(() => {
-                setProfile(newProfile);
-                setHasProfile(true);
-              })
-              .catch(async (serverError) => {
-                  const permissionError = new FirestorePermissionError({
-                    path: docRef.path,
-                    operation: 'update',
-                    requestResourceData: profileData,
-                  });
-                  errorEmitter.emit('permission-error', permissionError);
-                  // Re-throw the error if you want to handle it further up the chain
-                  throw serverError;
-              });
+        if (!user) {
+            console.error('❌ No authenticated user');
+            throw new Error('No authenticated user');
+        }
+
+        try {
+            console.log('🚀 Starting profile update for user:', user.uid);
+            console.log('📋 Profile data received:', newProfile);
+
+            // Create the exact same structure that worked manually
+            const profileData = {
+                firebase_uid: user.uid,
+                email: user.email || newProfile.email || 'no-email@example.com',
+                name: newProfile.name || 'Unknown User',
+                age: newProfile.age || 18,
+                bio: newProfile.bio || '',
+                headline: newProfile.headline || '',
+                job_title: newProfile.jobTitle || '',
+                company: newProfile.company || '',
+                experience_level: newProfile.experienceLevel || '',
+                location: newProfile.location || '',
+                photo_url: newProfile.photoURL || '',
+                tech_stack: newProfile.techStack || [],
+                interests: newProfile.interests || [],
+                networking_tags: newProfile.networkingTags || [],
+                college: newProfile.college || '',
+                current_work: newProfile.currentWork || '',
+                links: newProfile.links || {},
+                gender: newProfile.gender || ''
+            };
+
+            console.log('📤 Sending to Supabase:', profileData);
+
+            // Check if user already exists
+            const { data: existingUser } = await supabase
+                .from('users')
+                .select('id')
+                .eq('firebase_uid', user.uid)
+                .single();
+
+            let result;
+            if (existingUser) {
+                // Update existing user
+                console.log('🔄 Updating existing user:', existingUser.id);
+                result = await supabase
+                    .from('users')
+                    .update(profileData)
+                    .eq('firebase_uid', user.uid)
+                    .select()
+                    .single();
+            } else {
+                // Insert new user
+                console.log('➕ Creating new user');
+                result = await supabase
+                    .from('users')
+                    .insert(profileData)
+                    .select()
+                    .single();
+            }
+
+            const { data, error } = result;
+
+            if (error) {
+                console.error('❌ Supabase error:', error);
+                throw error;
+            }
+
+            console.log('✅ Success! Profile saved:', data);
+
+            // Transform back to UserProfile format
+            const transformedProfile: UserProfile = {
+                id: data.id,
+                name: data.name,
+                age: data.age,
+                bio: data.bio,
+                headline: data.headline,
+                jobTitle: data.job_title,
+                company: data.company,
+                experienceLevel: data.experience_level,
+                location: data.location,
+                photoURL: data.photo_url,
+                techStack: data.tech_stack || [],
+                interests: data.interests || [],
+                networkingTags: data.networking_tags || [],
+                college: data.college,
+                currentWork: data.current_work,
+                links: data.links || {},
+                email: data.email,
+                gender: data.gender
+            };
+
+            // Update local state
+            setProfile(transformedProfile);
+            setHasProfile(true);
+
+            console.log('🎉 Profile update complete!');
+
+        } catch (error) {
+            console.error('💥 Profile update failed:', error);
+            throw error;
         }
     };
 
