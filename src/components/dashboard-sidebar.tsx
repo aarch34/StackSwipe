@@ -8,7 +8,7 @@ import {
   Sparkles,
   User,
   LogOut,
-  Users,
+ 
 } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import {
@@ -27,7 +27,7 @@ import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 const menuItems = [
   { href: '/dashboard', icon: LayoutGrid, label: 'Swipe' },
   { href: '/dashboard/messages', icon: MessageSquare, label: 'Messages' },
-  { href: '/dashboard/community', icon: Users, label: 'Community' }, // 🎯 Added this line
+  
   {
     href: '/dashboard/recommendations',
     icon: Sparkles,
