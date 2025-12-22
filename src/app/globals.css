@@ -53,6 +53,17 @@ body {
     --ring: 0 75% 83.1%;
   }
 }
+@keyframes swipe-cards {
+  0% { transform: translateX(0); }
+  33% { transform: translateX(-33%); }
+  66% { transform: translateX(-66%); }
+  100% { transform: translateX(0); }
+}
+
+.animate-swipe-cards {
+  animation: swipe-cards 10s infinite ease-in-out;
+}
+
 
 @layer base {
   * {

@@ -448,35 +448,47 @@ export default function SwipePage() {
         </div>
 
         <div className="w-full max-w-sm flex flex-col items-center space-y-6">
-          <div className="relative h-[700px] w-full">
-              {loading ? (
-                <Card className="flex flex-col items-center justify-center text-center h-full">
-                    <CardHeader>
-                        <CardTitle className="font-headline text-2xl">Pulling threads to weave your network…</CardTitle>
-                    </CardHeader>
-                    <CardContent className='w-full px-12'>
-                       <Skeleton className="h-[450px] w-full" />
-                    </CardContent>
-                </Card>
-              ) : limitReached || noMoreProfiles ? (
-                  <Card className="flex flex-col items-center justify-center text-center h-full">
-                      <CardHeader>
-                          <CardTitle className="font-headline text-2xl">
-                            {noMoreProfiles ? "That's everyone for now!" : "You're out of swipes!"}
-                          </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                          <p>
-                            {noMoreProfiles ? "Check back later for new profiles or adjust your filters." : `You've reached your daily limit of ${SWIPE_LIMIT} swipes. Come back tomorrow!`}
-                          </p>
-                      </CardContent>
-                  </Card>
-              ) : (
-                <div className={cn("absolute w-full h-full", animationClass)}>
-                  <ProfileCard profile={currentProfile} />
-                </div>
-              )}
-          </div>
+  <div className="relative w-full">
+    {loading ? (
+      <Card className="flex flex-col items-center justify-center text-center h-[min(520px,70vh)]">
+        <CardHeader>
+          <CardTitle className="font-headline text-2xl">
+            Pulling threads to weave your network…
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="w-full px-4 sm:px-8">
+          <Skeleton className="h-[min(380px,55vh)] w-full" />
+        </CardContent>
+      </Card>
+    ) : limitReached || noMoreProfiles ? (
+      <Card className="flex flex-col items-center justify-center text-center h-[min(520px,70vh)]">
+        <CardHeader>
+          <CardTitle className="font-headline text-2xl">
+            {noMoreProfiles ? "That's everyone for now!" : "You're out of swipes!"}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p>
+            {noMoreProfiles
+              ? 'Check back later for new profiles or adjust your filters.'
+              : `You've reached your daily limit of ${SWIPE_LIMIT} swipes. Come back tomorrow!`}
+          </p>
+        </CardContent>
+      </Card>
+    ) : (
+      <div
+        className={cn(
+          'relative w-full h-[min(520px,70vh)] overflow-hidden',
+          animationClass
+        )}
+      >
+        <div className="h-full w-full overflow-y-auto">
+          <ProfileCard profile={currentProfile} />
+        </div>
+      </div>
+    )}
+  </div>
+
 
           <div className="flex flex-col items-center space-y-4">
             <div className="flex items-center justify-center space-x-4">
