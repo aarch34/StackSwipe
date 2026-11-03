@@ -12,7 +12,7 @@ A Next.js 14 networking application that connects tech professionals through int
 
 🎨 Modern UI/UX - Clean, responsive design built with Tailwind CSS and shadcn/ui
 
-🔐 Secure Authentication - Firebase Auth with Google OAuth integration
+🔐 Secure Authentication - Supabase Auth with Google, GitHub, and Email/Password integration
 
 📊 Advanced Filtering - Filter by tech stack, experience level, location, and interests
 
@@ -27,7 +27,7 @@ Backend: Next.js API Routes, Supabase
 
 Database: PostgreSQL (Supabase)
 
-Authentication: Firebase Auth
+Authentication: Supabase Auth
 
 Real-time: Supabase Realtime
 

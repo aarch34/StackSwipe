@@ -12,21 +12,22 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 // Helper functions for your app
 export const supabaseService = {
   // Get user profile
-  async getUserProfile(firebaseUid) {
+  async getUserProfile(userId) {
     const { data, error } = await supabase
       .from('users')
       .select('*')
-      .eq('firebase_uid', firebaseUid)
-      .single()
+      .or(`id.eq.${userId},firebase_uid.eq.${userId}`)
+      .maybeSingle()
     return { data, error }
   },
 
   // Create/update user profile
-  async upsertUserProfile(firebaseUid, profileData) {
+  async upsertUserProfile(userId, profileData) {
     const { data, error } = await supabase
       .from('users')
       .upsert({ 
-        firebase_uid: firebaseUid,
+        id: userId,
+        firebase_uid: userId, // Backwards compatibility for existing schema
         ...profileData,
         updated_at: new Date().toISOString()
       })
@@ -35,20 +36,20 @@ export const supabaseService = {
   },
 
   // Get potential matches (users not yet swiped)
-  async getPotentialMatches(firebaseUid) {
+  async getPotentialMatches(userId) {
     // Get current user's internal ID first
     const { data: currentUser } = await supabase
       .from('users')
       .select('id')
-      .eq('firebase_uid', firebaseUid)
-      .single()
+      .or(`id.eq.${userId},firebase_uid.eq.${userId}`)
+      .maybeSingle()
 
     if (!currentUser) return { data: [], error: 'User not found' }
 
     const { data, error } = await supabase
       .from('users')
       .select('*')
-      .neq('firebase_uid', firebaseUid)
+      .neq('id', currentUser.id)
       .not('id', 'in', `(
         SELECT swiped_id FROM swipes 
         WHERE swiper_id = '${currentUser.id}'
@@ -57,13 +58,13 @@ export const supabaseService = {
   },
 
   // Create a swipe
-  async createSwipe(firebaseUid, swipedUserId, direction) {
+  async createSwipe(userId, swipedUserId, direction) {
     // Get swiper's internal ID
     const { data: swiper } = await supabase
       .from('users')
       .select('id')
-      .eq('firebase_uid', firebaseUid)
-      .single()
+      .or(`id.eq.${userId},firebase_uid.eq.${userId}`)
+      .maybeSingle()
 
     if (!swiper) return { data: null, error: 'Swiper not found' }
 
@@ -78,13 +79,13 @@ export const supabaseService = {
   },
 
   // Get user's matches
-  async getUserMatches(firebaseUid) {
+  async getUserMatches(userId) {
     // Get current user's internal ID
     const { data: currentUser } = await supabase
       .from('users')
       .select('id')
-      .eq('firebase_uid', firebaseUid)
-      .single()
+      .or(`id.eq.${userId},firebase_uid.eq.${userId}`)
+      .maybeSingle()
 
     if (!currentUser) return { data: [], error: 'User not found' }
 

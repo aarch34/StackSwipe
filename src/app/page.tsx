@@ -208,14 +208,14 @@ export default function LandingPage() {
                 Modern stack, privacy‑first
               </h2>
               <p className="mt-2 text-sm text-muted-foreground">
-                Built with Next.js, Supabase, Firebase Auth, GROQ LLMs and
+                Built with Next.js, Supabase Auth & Database, GROQ LLMs and
                 Gemini—optimized for real‑time, secure professional networking.
               </p>
               <div className="mt-3 flex flex-wrap gap-1.5 text-[11px] text-muted-foreground">
                 <Tag>Next.js 15</Tag>
                 <Tag>Tailwind CSS</Tag>
                 <Tag>Supabase</Tag>
-                <Tag>Firebase</Tag>
+                <Tag>Supabase Auth</Tag>
                 <Tag>GROQ · Gemini</Tag>
               </div>
             </div>

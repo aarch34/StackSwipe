@@ -13,9 +13,21 @@ import { Skeleton } from '@/components/ui/skeleton';
 import type { UserProfile } from '@/lib/data';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { User as UserIcon, Upload } from 'lucide-react';
+import { User as UserIcon, Upload, Plus, X, Sparkles } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { uploadToCloudinary } from '@/lib/cloudinary'; // Add this import
+
+const PRESET_EXPERIENCE_LEVELS = [
+    { value: 'Intern', label: 'Intern' },
+    { value: 'Junior', label: 'Junior (0-2 yrs)' },
+    { value: 'Mid-level', label: 'Mid-level (2-5 yrs)' },
+    { value: 'Senior', label: 'Senior (5-8 yrs)' },
+    { value: 'Lead', label: 'Lead / Staff (8+ yrs)' },
+    { value: 'Manager', label: 'Engineering Manager' },
+    { value: 'Founder', label: 'Founder / Co-Founder' },
+    { value: 'Freelancer', label: 'Freelancer / Consultant' },
+    { value: 'Student', label: 'Student / Self-Taught' },
+];
 
 const networkingGoalOptions = [
     'Hackathon Teammate',
@@ -30,11 +42,21 @@ const networkingGoalOptions = [
 export default function ProfilePage() {
     const { profile: initialProfile, updateProfile, loading } = useAuth();
     const [profile, setProfile] = useState<UserProfile | null>(null);
-    const [uploading, setUploading] = useState(false); // Add loading state
+    const [uploading, setUploading] = useState(false);
+    const [isCustomExp, setIsCustomExp] = useState(false);
+    const [customExpValue, setCustomExpValue] = useState('');
+    const [customGoalInput, setCustomGoalInput] = useState('');
+    const [isAddingCustomGoal, setIsAddingCustomGoal] = useState(false);
     const { toast } = useToast();
 
     useEffect(() => {
         if (initialProfile) {
+            const exp = initialProfile.experienceLevel ?? '';
+            if (exp && !PRESET_EXPERIENCE_LEVELS.some(p => p.value === exp)) {
+                setIsCustomExp(true);
+                setCustomExpValue(exp);
+            }
+
             setProfile({
                 id: initialProfile.id || '',
                 name: initialProfile.name ?? '',
@@ -55,6 +77,8 @@ export default function ProfilePage() {
                     github: initialProfile.links?.github ?? '',
                     linkedin: initialProfile.links?.linkedin ?? '',
                 },
+                onboarding_completed: initialProfile.onboarding_completed ?? true,
+                onboarding_step: initialProfile.onboarding_step ?? 4,
             });
         }
     }, [initialProfile]);
@@ -247,20 +271,70 @@ export default function ProfilePage() {
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                              <div className="space-y-2">
-                                <Label htmlFor="experienceLevel">Experience Level</Label>
-                                <Select value={profile.experienceLevel} onValueChange={(value) => handleSelectChange('experienceLevel', value as UserProfile['experienceLevel'])}>
+                                <div className="flex items-center justify-between">
+                                    <Label htmlFor="experienceLevel">Experience Level</Label>
+                                    {isCustomExp && (
+                                        <span className="text-[10px] text-primary font-medium">Custom Active</span>
+                                    )}
+                                </div>
+                                <Select
+                                    value={isCustomExp ? 'custom' : (PRESET_EXPERIENCE_LEVELS.some(p => p.value === profile.experienceLevel) ? profile.experienceLevel : 'custom')}
+                                    onValueChange={(value) => {
+                                        if (value === 'custom') {
+                                            setIsCustomExp(true);
+                                            const customVal = customExpValue.trim() || profile.experienceLevel || 'Custom';
+                                            handleSelectChange('experienceLevel', customVal);
+                                        } else {
+                                            setIsCustomExp(false);
+                                            setCustomExpValue('');
+                                            handleSelectChange('experienceLevel', value);
+                                        }
+                                    }}
+                                >
                                     <SelectTrigger id="experienceLevel">
-                                        <SelectValue placeholder="Select your experience level" />
+                                        <SelectValue placeholder="Select your experience level">
+                                            {isCustomExp
+                                                ? (customExpValue || profile.experienceLevel ? `Custom: ${customExpValue || profile.experienceLevel}` : '✏️ Custom / Other...')
+                                                : (PRESET_EXPERIENCE_LEVELS.find(p => p.value === profile.experienceLevel)?.label || profile.experienceLevel || 'Select your experience level')}
+                                        </SelectValue>
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="Intern">Intern</SelectItem>
-                                        <SelectItem value="Junior">Junior</SelectItem>
-                                        <SelectItem value="Mid-level">Mid-level</SelectItem>
-                                        <SelectItem value="Senior">Senior</SelectItem>
-                                        <SelectItem value="Lead">Lead</SelectItem>
-                                        <SelectItem value="Manager">Manager</SelectItem>
+                                        {PRESET_EXPERIENCE_LEVELS.map(level => (
+                                            <SelectItem key={level.value} value={level.value}>{level.label}</SelectItem>
+                                        ))}
+                                        <SelectItem value="custom" className="font-semibold text-primary">✏️ Custom / Other...</SelectItem>
                                     </SelectContent>
                                 </Select>
+
+                                {isCustomExp && (
+                                    <div className="mt-2 space-y-1.5 animate-in fade-in duration-200">
+                                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                                            <span>Enter your custom role or experience:</span>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setIsCustomExp(false);
+                                                    setCustomExpValue('');
+                                                    handleSelectChange('experienceLevel', 'Junior');
+                                                }}
+                                                className="text-[11px] text-primary hover:underline font-medium"
+                                            >
+                                                Choose from presets
+                                            </button>
+                                        </div>
+                                        <Input
+                                            placeholder="e.g., Founder & CTO, Solopreneur, Research Fellow, VP of Eng"
+                                            value={customExpValue || (PRESET_EXPERIENCE_LEVELS.some(p => p.value === profile.experienceLevel) ? '' : profile.experienceLevel)}
+                                            onChange={(e) => {
+                                                const val = e.target.value;
+                                                setCustomExpValue(val);
+                                                handleSelectChange('experienceLevel', val);
+                                            }}
+                                            className="h-9 text-sm"
+                                            autoFocus
+                                        />
+                                    </div>
+                                )}
                             </div>
                              <div className="space-y-2">
                                 <Label htmlFor="company">Company</Label>
@@ -313,9 +387,14 @@ export default function ProfilePage() {
                             </div>
                         </div>
                         
-                        <div className="space-y-2">
-                            <Label>Networking Goals</Label>
-                             <div className="space-y-2 rounded-md border p-4">
+                        <div className="space-y-3">
+                            <div className="flex items-center justify-between">
+                                <Label className="text-base font-semibold">Networking Goals</Label>
+                                <span className="text-xs text-muted-foreground">Select what you are looking for</span>
+                            </div>
+
+                            <div className="space-y-2 rounded-md border p-4 bg-card">
+                                {/* Preset Goals */}
                                 {networkingGoalOptions.map((goal) => (
                                     <div key={goal} className="flex items-center space-x-2">
                                         <Checkbox
@@ -325,16 +404,122 @@ export default function ProfilePage() {
                                         />
                                         <label
                                             htmlFor={`goal-${goal.replace(/\s/g, '-')}`}
-                                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                            className="text-sm font-medium leading-none cursor-pointer peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex-1 py-1"
                                         >
                                             {goal}
                                         </label>
                                     </div>
                                 ))}
+
+                                {/* Custom Goals */}
+                                {profile.networkingTags.filter(t => !networkingGoalOptions.includes(t)).map((customGoal) => (
+                                    <div key={customGoal} className="flex items-center space-x-2 p-1.5 rounded-md bg-primary/5 border border-primary/20">
+                                        <Checkbox
+                                            id={`custom-goal-${customGoal}`}
+                                            checked={profile.networkingTags.includes(customGoal)}
+                                            onCheckedChange={(checked) => handleNetworkingTagChange(customGoal, !!checked)}
+                                        />
+                                        <label
+                                            htmlFor={`custom-goal-${customGoal}`}
+                                            className="text-sm font-medium leading-none cursor-pointer flex-1 flex items-center justify-between py-1"
+                                        >
+                                            <span>{customGoal}</span>
+                                            <div className="flex items-center gap-1.5">
+                                                <Badge variant="outline" className="text-[10px] text-primary border-primary/30">
+                                                    Custom
+                                                </Badge>
+                                                <button
+                                                    type="button"
+                                                    title="Remove custom goal"
+                                                    onClick={(e) => {
+                                                        e.preventDefault();
+                                                        handleNetworkingTagChange(customGoal, false);
+                                                    }}
+                                                    className="text-muted-foreground hover:text-destructive p-1 rounded transition-colors"
+                                                >
+                                                    <X className="w-3.5 h-3.5" />
+                                                </button>
+                                            </div>
+                                        </label>
+                                    </div>
+                                ))}
+
+                                {/* Add Custom Goal Section */}
+                                {!isAddingCustomGoal ? (
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsAddingCustomGoal(true)}
+                                        className="flex items-center space-x-2 text-xs font-semibold text-primary hover:text-primary/80 pt-2 px-1 transition-colors"
+                                    >
+                                        <Plus className="w-3.5 h-3.5" />
+                                        <span>✏️ Other / Custom Goal...</span>
+                                    </button>
+                                ) : (
+                                    <div className="pt-2 space-y-2 border-t border-border/50 animate-in fade-in duration-150">
+                                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                                            <span className="font-medium text-foreground flex items-center gap-1">
+                                                <Sparkles className="w-3 h-3 text-primary" /> Enter custom goal:
+                                            </span>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setIsAddingCustomGoal(false);
+                                                    setCustomGoalInput('');
+                                                }}
+                                                className="hover:text-foreground text-[11px]"
+                                            >
+                                                Cancel
+                                            </button>
+                                        </div>
+                                        <div className="flex gap-2">
+                                            <Input
+                                                placeholder="e.g., Looking for Co-Founder, Hackathon Team"
+                                                value={customGoalInput}
+                                                onChange={(e) => setCustomGoalInput(e.target.value)}
+                                                className="h-9 text-xs"
+                                                autoFocus
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Enter') {
+                                                        e.preventDefault();
+                                                        const trimmed = customGoalInput.trim();
+                                                        if (trimmed && !profile.networkingTags.includes(trimmed)) {
+                                                            handleNetworkingTagChange(trimmed, true);
+                                                            setCustomGoalInput('');
+                                                            setIsAddingCustomGoal(false);
+                                                        }
+                                                    }
+                                                }}
+                                            />
+                                            <Button
+                                                type="button"
+                                                size="sm"
+                                                className="h-9 px-3 text-xs shrink-0"
+                                                disabled={!customGoalInput.trim()}
+                                                onClick={() => {
+                                                    const trimmed = customGoalInput.trim();
+                                                    if (trimmed && !profile.networkingTags.includes(trimmed)) {
+                                                        handleNetworkingTagChange(trimmed, true);
+                                                        setCustomGoalInput('');
+                                                        setIsAddingCustomGoal(false);
+                                                    }
+                                                }}
+                                            >
+                                                <Plus className="w-3.5 h-3.5 mr-1" />
+                                                Add
+                                            </Button>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
-                            <div className="flex flex-wrap gap-2 pt-2">
+
+                            <div className="flex flex-wrap gap-2 pt-1">
                                 {profile.networkingTags.filter(Boolean).map((tag) => (
-                                    <Badge key={tag} variant="outline">{tag}</Badge>
+                                    <Badge key={tag} variant="outline" className="text-xs">
+                                        {tag}
+                                        {!networkingGoalOptions.includes(tag) && (
+                                            <span className="ml-1 text-[9px] text-primary">(custom)</span>
+                                        )}
+                                    </Badge>
                                 ))}
                             </div>
                         </div>

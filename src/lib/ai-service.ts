@@ -2,7 +2,7 @@ import Groq from "groq-sdk";
 import type { UserProfile } from './data';
 
 const groq = new Groq({
-  apiKey: process.env.GROQ_API_KEY!,
+  apiKey: process.env.GROQ_API_KEY || process.env.GROQ_STACKBOT_API_KEY,
 });
 
 interface ConversationContext {
@@ -85,7 +85,7 @@ Return only the 3 conversation starters, one per line, without numbering or bull
           content: prompt,
         },
       ],
-      model: "llama-3.1-70b-versatile", // Fast and smart Llama model
+      model: "openai/gpt-oss-120b",
       temperature: 0.7,
       max_tokens: 300,
     });
@@ -182,7 +182,7 @@ Return only the 3 reply suggestions, one per line, without numbering or bullets.
   try {
     const chatCompletion = await groq.chat.completions.create({
       messages: [{ role: "user", content: prompt }],
-      model: "llama-3.1-8b-instant", // Faster model for quick replies
+      model: "openai/gpt-oss-20b",
       temperature: 0.7,
       max_tokens: 200,
     });
@@ -235,7 +235,7 @@ Write the post content only, without any title or meta information.`;
   try {
     const chatCompletion = await groq.chat.completions.create({
       messages: [{ role: "user", content: prompt }],
-      model: "llama-3.1-8b-instant",
+      model: "openai/gpt-oss-20b",
       temperature: 0.7,
       max_tokens: 400,
     });

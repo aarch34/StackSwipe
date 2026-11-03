@@ -1,31 +1,21 @@
+import { AuthForm } from '@/components/auth-form';
 
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Icons } from '@/components/icons';
+export const metadata = {
+  title: 'Join StackSwipe | Login & Sign Up',
+  description: 'Connect with tech professionals. Sign in with Google, GitHub, or Email.',
+};
 
 export default function AuthPage() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <Card className="mx-auto max-w-sm">
-        <CardHeader className="text-center">
-          <div className="flex justify-center items-center mb-4">
-            <Icons.logo className="size-8 text-primary" />
-          </div>
-          <CardTitle className="text-2xl font-headline">Join StackSwipe</CardTitle>
-          <CardDescription>
-            Connect with tech professionals. Your next opportunity awaits.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-4">
-           <Button asChild>
-              <Link href="/signup">Create an Account</Link>
-           </Button>
-           <Button variant="outline" asChild>
-              <Link href="/login">Login to Your Account</Link>
-           </Button>
-        </CardContent>
-      </Card>
+    <div className="relative min-h-screen flex items-center justify-center p-4 sm:p-6 lg:p-8 bg-gradient-to-b from-background via-background/70 to-background">
+      {/* Background radial glow */}
+      <div className="absolute inset-0 -z-10 pointer-events-none flex items-center justify-center">
+        <div className="h-[450px] w-[450px] rounded-full bg-primary/10 blur-[120px]" />
+      </div>
+
+      <div className="w-full max-w-md py-8">
+        <AuthForm initialMode="signup" />
+      </div>
     </div>
   );
 }

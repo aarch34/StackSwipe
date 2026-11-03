@@ -1,16 +1,15 @@
 
-import { Timestamp } from "firebase/firestore";
-
 export type UserProfile = {
   id: string;
   name: string;
   headline: string;
   bio: string;
   currentWork: string;
+  jobTitle?: string;
   location: string;
   age: number;
-  gender: string;
-  experienceLevel: 'Intern' | 'Junior' | 'Mid-level' | 'Senior' | 'Lead' | 'Manager' | '';
+  gender?: string;
+  experienceLevel: string;
   company: string;
   college: string;
   photoURL?: string;
@@ -21,13 +20,23 @@ export type UserProfile = {
     github: string;
     linkedin: string;
   };
+  email?: string;
+  onboarding_completed?: boolean;
+  onboarding_step?: number;
+  account_status?: 'active' | 'suspended' | 'banned' | 'soft_deleted';
+  suspended_until?: string | null;
+  suspension_reason?: string | null;
+  ban_reason?: string | null;
+  warning_count?: number;
 };
 
 export type Message = {
   id: string;
   senderId: string;
   text: string;
-  timestamp: Timestamp;
+  timestamp: Date | string;
+  imageUrl?: string | null;
+  read?: boolean;
 };
 
 export type Conversation = {
@@ -40,8 +49,10 @@ export type Conversation = {
 export type Match = {
     id: string;
     userIds: string[];
-    matchedAt: Timestamp;
+    matchedAt?: Date | string;
+    createdAt?: Date | string;
     users?: UserProfile[];
+    matchIds?: string[];
 };
 
 // Add these interfaces to your existing data.ts file

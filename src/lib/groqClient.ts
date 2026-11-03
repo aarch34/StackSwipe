@@ -1,23 +1,45 @@
 // src/lib/groqClient.ts
 import Groq from 'groq-sdk';
 
+const apiKey = process.env.GROQ_STACKBOT_API_KEY || process.env.GROQ_API_KEY;
+
 export const groq = new Groq({
-  // Map your custom env var name to what groq-sdk expects
-  apiKey: process.env.GROQ_STACKBOT_API_KEY,
+  apiKey,
 });
 
-export async function groqChat(message: string) {
-  const completion = await groq.chat.completions.create({
-    model: 'llama-3.3-70b-versatile', // or another Groq model
-    messages: [
-      {
-        role: 'system',
-        content:
-          'You are StackSwipe Bot, a helpful, concise networking assistant.',
-      },
-      { role: 'user', content: message },
-    ],
-  });
+// Candidate models verified to be available and working on your Groq key
+const CANDIDATE_MODELS = [
+  'openai/gpt-oss-120b',
+  'openai/gpt-oss-20b',
+  'qwen/qwen3.8-27b',
+];
 
-  return completion.choices[0]?.message?.content ?? '';
+export async function groqChat(message: string): Promise<string> {
+  let lastError: any = null;
+
+  for (const model of CANDIDATE_MODELS) {
+    try {
+      const completion = await groq.chat.completions.create({
+        model,
+        messages: [
+          {
+            role: 'system',
+            content:
+              'You are StackBot, a helpful, friendly, and concise tech and career networking assistant for StackSwipe. Assist users with software engineering questions, learning paths, tech stack recommendations, and networking.',
+          },
+          { role: 'user', content: message },
+        ],
+        temperature: 0.7,
+        max_tokens: 800,
+      });
+
+      const reply = completion.choices[0]?.message?.content;
+      if (reply) return reply;
+    } catch (err: any) {
+      console.warn(`Groq model ${model} failed, attempting fallback:`, err?.message || err);
+      lastError = err;
+    }
+  }
+
+  throw lastError || new Error('No Groq chat model responded successfully.');
 }

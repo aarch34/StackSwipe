@@ -4,7 +4,6 @@ import { Toaster } from '@/components/ui/toaster';
 import { ThemeProvider } from '@/components/theme-provider';
 import { AuthProvider } from '@/hooks/use-auth';
 import { AppRouter } from '@/components/app-router';
-import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 
 export default function RootLayout({
   children,
@@ -34,7 +33,6 @@ export default function RootLayout({
             disableTransitionOnChange
           >
             <AuthProvider>
-              <FirebaseErrorListener />
               <AppRouter>
                 {children}
               </AppRouter>

@@ -63,7 +63,7 @@ export function DashboardSidebar() {
                 isActive={isActive(item.href)}
                 tooltip={{ children: item.label, side: 'right' }}
               >
-                <Link href={item.href}>
+                <Link href={item.href} prefetch={true}>
                   <item.icon />
                   <span>{item.label}</span>
                 </Link>
@@ -92,7 +92,7 @@ export function DashboardSidebar() {
               isActive={isActive('/dashboard/profile')}
               tooltip={{ children: "Edit Profile", side: 'right' }}
             >
-              <Link href="/dashboard/profile">
+              <Link href="/dashboard/profile" prefetch={true}>
                 <User />
                 <span>Edit Profile</span>
               </Link>
@@ -100,10 +100,13 @@ export function DashboardSidebar() {
           </SidebarMenuItem>
           <SidebarMenuItem>
             <SidebarMenuButton
-                onClick={logout}
+                onClick={(e) => {
+                  e.preventDefault();
+                  logout();
+                }}
                 tooltip={{ children: "Logout", side: 'right' }}
               >
-                  <LogOut />
+                  <LogOut className="h-4 w-4" />
                   <span>Logout</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
