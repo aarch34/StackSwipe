@@ -225,7 +225,6 @@ a.px-raised:active {
 }
 
 .px-sprite {
-  position: relative;
   aspect-ratio: 1;
 }
 

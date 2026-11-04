@@ -24,6 +24,12 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning className={`${pixel.variable} ${label.variable} ${body.variable}`}>
       <body className="font-body">
+          <a
+            href="#main-content"
+            className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[200] focus:bg-accent focus:px-4 focus:py-2 focus:font-headline focus:text-lg focus:text-accent-foreground"
+          >
+            Skip to content
+          </a>
           <ThemeProvider
             attribute="class"
             defaultTheme="light"

@@ -92,7 +92,7 @@ export function Stacky({
   walking?: boolean;
 }) {
   return (
-    <span className={cn('px-sprite inline-block', walking ? 'px-walk' : 'px-bob', className)} aria-hidden="true">
+    <span className={cn('px-sprite relative inline-block', walking ? 'px-walk' : 'px-bob', className)} aria-hidden="true">
       <Sprite rows={[...STACKY_BODY, ...LEGS_A]} className="px-frame-a" />
       <Sprite rows={[...STACKY_BODY, ...LEGS_B]} className="px-frame-b" />
       <Sprite rows={[...STACKY_BLINK, ...LEGS_A]} className="px-frame-blink" />
@@ -135,7 +135,7 @@ const COIN = [
   '.kyyyyk.',
   '..kkkk..',
 ];
-const COIN_SPENT = COIN.map((row) => row.replace(/[yw]/g, '.'));
+const COIN_SPENT = COIN.map((row) => row.replace(/[yw]/g, 'c'));
 
 export function Coin({ spent = false, className }: { spent?: boolean; className?: string }) {
   return <Sprite rows={spent ? COIN_SPENT : COIN} className={className} />;

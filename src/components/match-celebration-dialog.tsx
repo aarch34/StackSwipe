@@ -73,7 +73,7 @@ export function MatchCelebrationDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-full max-w-md gap-0 overflow-hidden p-0">
+      <DialogContent className="w-[94vw] max-w-md grid-cols-[minmax(0,1fr)] gap-0 overflow-hidden p-0 max-h-[92vh] overflow-y-auto">
         <div className="relative overflow-hidden bg-[color:var(--c-pink)] px-6 pb-6 pt-8 text-center text-[color:var(--c-ink)]">
           <div className="mb-3 inline-flex items-center gap-1.5 bg-[color:var(--c-ink)] px-3 py-1 font-label text-xs text-[color:var(--c-cream)]">
             200 OK: mutual handshake
@@ -116,7 +116,7 @@ export function MatchCelebrationDialog({
         </div>
 
         {/* Profile Details & Shared Skills */}
-        <div className="px-6 py-4 space-y-4">
+        <div className="min-w-0 px-6 py-4 space-y-4">
           <div className="space-y-2.5 border-2 bg-card p-3.5">
             <div className="flex items-start justify-between">
               <div>

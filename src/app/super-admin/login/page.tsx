@@ -80,7 +80,7 @@ export default function AdminLoginPage() {
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center text-slate-400">
         <div className="flex flex-col items-center gap-3">
-          <Shield className="h-8 w-8 text-emerald-400 animate-pulse" />
+          <Shield className="h-8 w-8 text-primary animate-pulse" />
           <p className="text-xs font-mono">Verifying administrative security clearance…</p>
         </div>
       </div>
@@ -88,19 +88,17 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 flex flex-col justify-center items-center p-4 relative overflow-hidden">
-      {/* Subtle grid background */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#1f293710_1px,transparent_1px),linear-gradient(to_bottom,#1f293710_1px,transparent_1px)] bg-[size:4rem_4rem] pointer-events-none" />
+    <div className="bg-grid min-h-screen flex flex-col justify-center items-center p-4 relative overflow-hidden">
 
       <div className="w-full max-w-md relative z-10">
         {/* Brand Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center h-14 w-14 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-400 text-slate-950 shadow-xl shadow-emerald-500/20 mb-3 border border-emerald-400/30">
+          <div className="px-raised inline-flex items-center justify-center h-14 w-14 bg-primary text-primary-foreground mb-3">
             <Shield className="h-7 w-7" />
           </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white flex items-center justify-center gap-2">
+          <h1 className="font-headline text-5xl font-bold leading-none text-white flex items-center justify-center gap-2">
             StackSwipe
-            <span className="text-xs uppercase font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 tracking-wider">
+            <span className="font-label text-xs px-2 py-0.5 bg-accent text-accent-foreground">
               Super Admin
             </span>
           </h1>
@@ -109,10 +107,10 @@ export default function AdminLoginPage() {
           </p>
         </div>
 
-        <Card className="border border-white/10 bg-slate-900/80 backdrop-blur-xl shadow-2xl rounded-3xl overflow-hidden">
+        <Card className="px-raised bg-card overflow-hidden">
           <CardHeader className="space-y-1 pb-4">
-            <CardTitle className="text-lg font-bold text-white flex items-center gap-2">
-              <Lock className="w-4 h-4 text-emerald-400" />
+            <CardTitle className="font-headline text-3xl font-bold text-white flex items-center gap-2">
+              <Lock className="w-5 h-5 text-primary" />
               Administrative Login
             </CardTitle>
             <CardDescription className="text-xs text-slate-400">
@@ -142,7 +140,7 @@ export default function AdminLoginPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
-                    className="pl-9 bg-slate-950/60 border-white/10 text-slate-100 placeholder:text-slate-600 text-xs focus-visible:ring-emerald-500"
+                    className="pl-9 bg-slate-950/60 border-white/10 text-slate-100 placeholder:text-slate-600 text-xs focus-visible:ring-ring"
                   />
                 </div>
               </div>
@@ -160,7 +158,7 @@ export default function AdminLoginPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
-                    className="pl-9 bg-slate-950/60 border-white/10 text-slate-100 placeholder:text-slate-600 text-xs focus-visible:ring-emerald-500"
+                    className="pl-9 bg-slate-950/60 border-white/10 text-slate-100 placeholder:text-slate-600 text-xs focus-visible:ring-ring"
                   />
                 </div>
               </div>
@@ -178,7 +176,7 @@ export default function AdminLoginPage() {
               <Button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-semibold text-xs shadow-lg shadow-emerald-500/20 py-2.5 gap-2"
+                className="w-full py-2.5 gap-2"
               >
                 {loading ? (
                   'Verifying Credentials…'

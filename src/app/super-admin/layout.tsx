@@ -70,6 +70,7 @@ export default function SuperAdminLayout({
   // If we are on the login page, don't show the admin dashboard shell
   const isLoginPage = pathname === '/super-admin/login';
 
+
   useEffect(() => {
     if (isLoginPage) {
       setCheckingAuth(false);
@@ -131,9 +132,9 @@ export default function SuperAdminLayout({
   if (checkingAuth) {
     return (
       <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center text-slate-400 gap-3">
-        <Shield className="h-10 w-10 text-emerald-400 animate-pulse" />
+        <Shield className="h-10 w-10 text-primary animate-pulse" />
         <div className="flex flex-col items-center">
-          <p className="text-sm font-semibold text-white">StackSwipe Super Admin</p>
+          <p className="font-headline text-2xl font-semibold text-white">StackSwipe Super Admin</p>
           <p className="text-xs text-slate-500 font-mono mt-0.5">Authorizing session clearance…</p>
         </div>
       </div>
@@ -168,20 +169,20 @@ export default function SuperAdminLayout({
         {/* SIDEBAR NAVIGATION */}
         <aside
           className={cn(
-            'fixed inset-y-0 left-0 z-50 w-64 bg-slate-950/95 border-r border-white/10 flex flex-col transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 backdrop-blur-xl',
+            'fixed inset-y-0 left-0 z-50 w-64 bg-slate-950 border-r-4 border-white/10 flex flex-col transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 backdrop-blur-xl',
             sidebarOpen ? 'translate-x-0' : '-translate-x-full'
           )}
         >
           {/* Brand Header */}
           <div className="h-16 flex items-center justify-between px-5 border-b border-white/10">
             <Link href="/super-admin" className="flex items-center gap-2.5 group">
-              <div className="h-9 w-9 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-slate-950 shadow-md shadow-emerald-500/20 group-hover:scale-105 transition-transform">
+              <div className="h-9 w-9 rounded-xl bg-primary flex items-center justify-center text-primary-foreground group-hover:-translate-y-0.5 transition-transform duration-100">
                 <Shield className="h-5 w-5" />
               </div>
               <div className="flex flex-col">
-                <span className="font-extrabold text-sm text-white tracking-tight flex items-center gap-1.5">
+                <span className="font-headline text-2xl font-bold leading-none text-white flex items-center gap-1.5">
                   StackSwipe
-                  <span className="text-[10px] font-mono font-normal px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                  <span className="font-label text-[10px] font-normal px-1.5 py-0.5 bg-accent text-accent-foreground">
                     ADM
                   </span>
                 </span>
@@ -221,7 +222,7 @@ export default function SuperAdminLayout({
                   className={cn(
                     'flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-all group',
                     isActive
-                      ? 'bg-gradient-to-r from-emerald-500/15 to-teal-500/10 text-emerald-300 border border-emerald-500/30 shadow-sm'
+                      ? 'bg-accent text-accent-foreground'
                       : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'
                   )}
                 >
@@ -230,7 +231,7 @@ export default function SuperAdminLayout({
                       className={cn(
                         'h-4 w-4 transition-colors',
                         isActive
-                          ? 'text-emerald-400'
+                          ? 'text-accent-foreground'
                           : 'text-slate-400 group-hover:text-slate-200'
                       )}
                     />
@@ -264,7 +265,7 @@ export default function SuperAdminLayout({
             <div className="flex items-center justify-between p-2 rounded-xl bg-slate-900/60 border border-white/5">
               <div className="flex items-center gap-2.5 truncate">
                 <Avatar className="h-8 w-8 border border-white/10 shrink-0">
-                  <AvatarFallback className="bg-emerald-500/20 text-emerald-300 text-xs font-bold">
+                  <AvatarFallback className="bg-primary text-primary-foreground text-xs font-bold">
                     {adminUser?.name?.charAt(0) || 'A'}
                   </AvatarFallback>
                 </Avatar>
@@ -297,7 +298,7 @@ export default function SuperAdminLayout({
         {/* MAIN CONTENT AREA */}
         <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
           {/* TOPBAR */}
-          <header className="h-16 border-b border-white/10 bg-slate-950/80 backdrop-blur-md px-4 sm:px-6 flex items-center justify-between gap-4 sticky top-0 z-30">
+          <header className="h-16 border-b border-white/10 bg-slate-950 px-4 sm:px-6 flex items-center justify-between gap-4 sticky top-0 z-30">
             <div className="flex items-center gap-3">
               <Button
                 variant="ghost"
@@ -322,7 +323,7 @@ export default function SuperAdminLayout({
                       }
                     }
                   }}
-                  className="pl-9 h-8 bg-slate-900/60 border-white/10 text-xs text-slate-200 placeholder:text-slate-500 rounded-lg focus-visible:ring-emerald-500"
+                  className="pl-9 h-8 bg-slate-900/60 border-white/10 text-xs text-slate-200 placeholder:text-slate-500 rounded-lg focus-visible:ring-ring"
                 />
               </div>
             </div>

@@ -1,7 +1,7 @@
 
 'use client';
 
-import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
+import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import { DashboardSidebar } from '@/components/dashboard-sidebar';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Button } from '@/components/ui/button';
@@ -34,6 +34,7 @@ export default function DashboardLayout({
       <SidebarInset>
         <div className="h-screen max-h-screen flex flex-col overflow-hidden">
           <header className="flex-shrink-0 h-14 flex justify-end items-center px-4 gap-2 border-b-4 bg-background z-10">
+            <SidebarTrigger className="mr-auto h-10 w-10 md:hidden" />
             <ThemeToggle />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

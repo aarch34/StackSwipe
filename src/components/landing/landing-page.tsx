@@ -62,7 +62,7 @@ export function LandingPage() {
 
       gsap.registerPlugin(ScrollTrigger);
 
-      const lenis = new Lenis();
+      const lenis = new Lenis({ anchors: { offset: -72 } });
       lenis.on('scroll', ScrollTrigger.update);
       const raf = (time: number) => lenis.raf(time * 1000);
       gsap.ticker.add(raf);

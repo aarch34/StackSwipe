@@ -371,20 +371,20 @@ export default function SuperAdminOverviewPage() {
                 <AreaChart data={analyticsData}>
                   <defs>
                     <linearGradient id="dauGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.4} />
-                      <stop offset="95%" stopColor="#10b981" stopOpacity={0.0} />
+                      <stop offset="5%" stopColor="#2FB84A" stopOpacity={0.4} />
+                      <stop offset="95%" stopColor="#2FB84A" stopOpacity={0.4} />
                     </linearGradient>
                     <linearGradient id="userGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.4} />
-                      <stop offset="95%" stopColor="#06b6d4" stopOpacity={0.0} />
+                      <stop offset="5%" stopColor="#FF7A9A" stopOpacity={0.4} />
+                      <stop offset="95%" stopColor="#FF7A9A" stopOpacity={0.4} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" />
-                  <XAxis dataKey="label" stroke="#64748b" fontSize={11} />
-                  <YAxis stroke="#64748b" fontSize={11} allowDecimals={false} />
+                  <XAxis dataKey="label" stroke="#BBA0A0" fontSize={11} />
+                  <YAxis stroke="#BBA0A0" fontSize={11} allowDecimals={false} />
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: '#0f172a',
+                      backgroundColor: '#321C27',
                       borderColor: '#ffffff15',
                       borderRadius: '0.75rem',
                       fontSize: '12px',
@@ -392,19 +392,19 @@ export default function SuperAdminOverviewPage() {
                   />
                   <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '10px' }} />
                   <Area
-                    type="monotone"
+                    type="stepAfter"
                     dataKey="dau"
                     name="Daily Active (DAU)"
-                    stroke="#10b981"
+                    stroke="#2FB84A"
                     strokeWidth={2}
                     fillOpacity={1}
                     fill="url(#dauGrad)"
                   />
                   <Area
-                    type="monotone"
+                    type="stepAfter"
                     dataKey="newUsers"
                     name="New Registrations"
-                    stroke="#06b6d4"
+                    stroke="#FF7A9A"
                     strokeWidth={2}
                     fillOpacity={1}
                     fill="url(#userGrad)"
@@ -433,20 +433,20 @@ export default function SuperAdminOverviewPage() {
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={analyticsData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" />
-                  <XAxis dataKey="label" stroke="#64748b" fontSize={11} />
-                  <YAxis stroke="#64748b" fontSize={11} allowDecimals={false} />
+                  <XAxis dataKey="label" stroke="#BBA0A0" fontSize={11} />
+                  <YAxis stroke="#BBA0A0" fontSize={11} allowDecimals={false} />
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: '#0f172a',
+                      backgroundColor: '#321C27',
                       borderColor: '#ffffff15',
                       borderRadius: '0.75rem',
                       fontSize: '12px',
                     }}
                   />
                   <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '10px' }} />
-                  <Bar dataKey="swipes" name="Swipes" fill="#f59e0b" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="matches" name="Matches" fill="#ec4899" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="messages" name="Messages" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="swipes" name="Swipes" fill="#FFD83F" radius={0} />
+                  <Bar dataKey="matches" name="Matches" fill="#FF7A9A" radius={0} />
+                  <Bar dataKey="messages" name="Messages" fill="#9C80DC" radius={0} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -455,7 +455,7 @@ export default function SuperAdminOverviewPage() {
       </div>
 
       {/* Quick Action Dock */}
-      <div className="rounded-2xl border border-white/10 bg-gradient-to-r from-slate-900/90 to-slate-950 p-5 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div className="border-2 border-white/10 bg-slate-900 p-5 flex flex-col sm:flex-row items-center justify-between gap-4">
         <div>
           <h3 className="font-bold text-white text-sm">Quick Safety & Operations Dock</h3>
           <p className="text-xs text-slate-400 mt-0.5">

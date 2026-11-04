@@ -196,16 +196,16 @@ export default function PlatformAnalyticsPage() {
               <AreaChart data={timeSeries}>
                 <defs>
                   <linearGradient id="dauColor" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#38bdf8" stopOpacity={0.4} />
-                    <stop offset="95%" stopColor="#38bdf8" stopOpacity={0.0} />
+                    <stop offset="5%" stopColor="#FF7A9A" stopOpacity={0.4} />
+                    <stop offset="95%" stopColor="#FF7A9A" stopOpacity={0.4} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" />
-                <XAxis dataKey="label" stroke="#64748b" fontSize={11} />
-                <YAxis stroke="#64748b" fontSize={11} allowDecimals={false} />
+                <XAxis dataKey="label" stroke="#BBA0A0" fontSize={11} />
+                <YAxis stroke="#BBA0A0" fontSize={11} allowDecimals={false} />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: '#0f172a',
+                    backgroundColor: '#321C27',
                     borderColor: '#ffffff15',
                     borderRadius: '0.75rem',
                     fontSize: '12px',
@@ -213,18 +213,18 @@ export default function PlatformAnalyticsPage() {
                 />
                 <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '10px' }} />
                 <Area
-                  type="monotone"
+                  type="stepAfter"
                   dataKey="dau"
                   name="Active Devs (DAU)"
-                  stroke="#38bdf8"
+                  stroke="#FF7A9A"
                   strokeWidth={2}
                   fill="url(#dauColor)"
                 />
                 <Line
-                  type="monotone"
+                  type="stepAfter"
                   dataKey="newUsers"
                   name="New Signups"
-                  stroke="#10b981"
+                  stroke="#2FB84A"
                   strokeWidth={2}
                 />
               </AreaChart>
@@ -249,11 +249,11 @@ export default function PlatformAnalyticsPage() {
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={timeSeries}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" />
-                <XAxis dataKey="label" stroke="#64748b" fontSize={11} />
-                <YAxis stroke="#64748b" fontSize={11} allowDecimals={false} />
+                <XAxis dataKey="label" stroke="#BBA0A0" fontSize={11} />
+                <YAxis stroke="#BBA0A0" fontSize={11} allowDecimals={false} />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: '#0f172a',
+                    backgroundColor: '#321C27',
                     borderColor: '#ffffff15',
                     borderRadius: '0.75rem',
                     fontSize: '12px',
@@ -263,14 +263,14 @@ export default function PlatformAnalyticsPage() {
                 <Bar
                   dataKey="rightSwipes"
                   name="Right Swipes (Connect)"
-                  fill="#10b981"
-                  radius={[4, 4, 0, 0]}
+                  fill="#2FB84A"
+                  radius={0}
                 />
                 <Bar
                   dataKey="leftSwipes"
                   name="Left Swipes (Skip)"
-                  fill="#64748b"
-                  radius={[4, 4, 0, 0]}
+                  fill="#BBA0A0"
+                  radius={0}
                 />
               </BarChart>
             </ResponsiveContainer>
@@ -294,21 +294,21 @@ export default function PlatformAnalyticsPage() {
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={timeSeries}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" />
-                <XAxis dataKey="label" stroke="#64748b" fontSize={11} />
-                <YAxis stroke="#64748b" fontSize={11} allowDecimals={false} />
+                <XAxis dataKey="label" stroke="#BBA0A0" fontSize={11} />
+                <YAxis stroke="#BBA0A0" fontSize={11} allowDecimals={false} />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: '#0f172a',
+                    backgroundColor: '#321C27',
                     borderColor: '#ffffff15',
                     borderRadius: '0.75rem',
                     fontSize: '12px',
                   }}
                 />
                 <Line
-                  type="monotone"
+                  type="stepAfter"
                   dataKey="messages"
                   name="Messages Sent"
-                  stroke="#a855f7"
+                  stroke="#9C80DC"
                   strokeWidth={2.5}
                   dot={{ r: 3 }}
                 />
@@ -334,11 +334,11 @@ export default function PlatformAnalyticsPage() {
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={timeSeries}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" />
-                <XAxis dataKey="label" stroke="#64748b" fontSize={11} />
-                <YAxis stroke="#64748b" fontSize={11} allowDecimals={false} />
+                <XAxis dataKey="label" stroke="#BBA0A0" fontSize={11} />
+                <YAxis stroke="#BBA0A0" fontSize={11} allowDecimals={false} />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: '#0f172a',
+                    backgroundColor: '#321C27',
                     borderColor: '#ffffff15',
                     borderRadius: '0.75rem',
                     fontSize: '12px',
@@ -347,8 +347,8 @@ export default function PlatformAnalyticsPage() {
                 <Bar
                   dataKey="reports"
                   name="Safety Reports"
-                  fill="#ef4444"
-                  radius={[4, 4, 0, 0]}
+                  fill="#F2572B"
+                  radius={0}
                 />
               </BarChart>
             </ResponsiveContainer>
