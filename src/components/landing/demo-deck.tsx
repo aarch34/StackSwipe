@@ -73,8 +73,9 @@ export function DemoDeck() {
               ref={ref}
               {...handlers}
               className={cn(
-                'px-swipe-card px-raised animate-card-in absolute inset-0 flex cursor-grab flex-col justify-between overflow-hidden p-6 active:cursor-grabbing',
+                'px-swipe-card px-raised absolute inset-0 flex cursor-grab flex-col justify-between overflow-hidden p-6 active:cursor-grabbing',
                 card.tone,
+                !exit && 'animate-card-in',
                 exit === 'left' && 'animate-swipe-out-left',
                 exit === 'right' && 'animate-swipe-out-right'
               )}

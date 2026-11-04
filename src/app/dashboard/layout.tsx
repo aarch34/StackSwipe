@@ -33,7 +33,7 @@ export default function DashboardLayout({
       <DashboardSidebar />
       <SidebarInset>
         <div className="h-screen max-h-screen flex flex-col overflow-hidden">
-          <header className="flex-shrink-0 h-14 flex justify-end items-center px-4 gap-2 border-b bg-background/80 backdrop-blur-md z-10">
+          <header className="flex-shrink-0 h-14 flex justify-end items-center px-4 gap-2 border-b-4 bg-background z-10">
             <ThemeToggle />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -49,10 +49,10 @@ export default function DashboardLayout({
             </DropdownMenu>
           </header>
 
-          <div className="flex-1 min-h-0 overflow-y-auto flex flex-col">
+          <div className="bg-grid flex-1 min-h-0 overflow-y-auto flex flex-col">
             {isRestricted ? (
-              <div className="flex-1 flex items-center justify-center p-6 bg-slate-950">
-                <div className="max-w-md w-full rounded-3xl border border-red-500/20 bg-slate-900/90 p-8 text-center shadow-2xl backdrop-blur-xl">
+              <div className="dark flex flex-1 items-center justify-center bg-background p-6 text-foreground">
+                <div className="max-w-md w-full px-raised bg-card p-8 text-center">
                   <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-red-500/10 border border-red-500/20 text-red-400">
                     {profile?.account_status === 'banned' ? (
                       <ShieldAlert className="h-8 w-8 text-red-500" />
@@ -96,7 +96,7 @@ export default function DashboardLayout({
                     <Button
                       variant="outline"
                       onClick={() => logout()}
-                      className="border-white/15 text-slate-200 hover:bg-slate-800 gap-2"
+                      className="gap-2"
                     >
                       <LogOut className="h-4 w-4" />
                       Sign Out

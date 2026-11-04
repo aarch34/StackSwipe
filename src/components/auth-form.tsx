@@ -159,14 +159,12 @@ export function AuthForm({ initialMode = 'login' }: AuthFormProps) {
 
   return (
     <div className="w-full max-w-md mx-auto">
-      <Card className="border-border/80 shadow-2xl backdrop-blur-xl bg-card/95">
+      <Card className="px-raised bg-card">
         <CardHeader className="text-center pb-4">
           <div className="flex justify-center mb-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 border border-primary/20 text-primary shadow-sm">
-              <Icons.logo className="h-7 w-7" />
-            </div>
+            <Icons.logo className="h-10 w-10" />
           </div>
-          <CardTitle className="text-2xl sm:text-3xl font-headline font-bold tracking-tight">
+          <CardTitle className="font-headline text-4xl font-bold leading-none sm:text-5xl">
             {mode === 'signup' ? 'Create an Account' : 'Welcome to StackSwipe'}
           </CardTitle>
           <CardDescription className="text-sm text-muted-foreground mt-1">
@@ -191,7 +189,7 @@ export function AuthForm({ initialMode = 'login' }: AuthFormProps) {
             <Button
               type="button"
               variant="outline"
-              className="w-full h-11 relative font-medium border-border/80 hover:bg-muted/70 transition-all flex items-center justify-center gap-2"
+              className="w-full h-11 relative flex items-center justify-center gap-2"
               disabled={loadingProvider !== null}
               onClick={() => handleOAuth('google')}
             >
@@ -206,7 +204,7 @@ export function AuthForm({ initialMode = 'login' }: AuthFormProps) {
             <Button
               type="button"
               variant="outline"
-              className="w-full h-11 relative font-medium border-border/80 hover:bg-muted/70 transition-all flex items-center justify-center gap-2"
+              className="w-full h-11 relative flex items-center justify-center gap-2"
               disabled={loadingProvider !== null}
               onClick={() => handleOAuth('github')}
             >
@@ -357,7 +355,7 @@ export function AuthForm({ initialMode = 'login' }: AuthFormProps) {
           </div>
         </CardContent>
 
-        <CardFooter className="flex flex-col border-t border-border/50 py-3 text-center text-[11px] text-muted-foreground">
+        <CardFooter className="flex flex-col border-t-2 py-3 text-center text-[11px] text-muted-foreground">
           <p>
             By continuing, you agree to StackSwipe&apos;s{' '}
             <Link href="#" className="underline hover:text-foreground">

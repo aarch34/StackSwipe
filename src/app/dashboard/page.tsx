@@ -1,8 +1,11 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { CoinRow, PixelHeart, PixelStar, Stacky } from '@/components/pixel/sprites';
+import { PixelDissolve } from '@/components/pixel/pixel-dissolve';
+import { useSwipeDrag } from '@/hooks/use-swipe-drag';
 import Link from 'next/link';
-import { Heart, SlidersHorizontal, Undo, X as XIcon, Users, RotateCcw, Sparkles, PartyPopper } from '@/components/px-icons';
+import { Heart, SlidersHorizontal, Undo, X as XIcon, RotateCcw, Sparkles, PartyPopper } from '@/components/px-icons';
 import confetti from 'canvas-confetti';
 import { UserProfile } from '@/lib/data';
 import { useAuth } from '@/hooks/use-auth';
@@ -57,6 +60,7 @@ export default function SwipePage() {
   const [swipedIds, setSwipedIds] = useState<Set<string>>(new Set());
   const [swipes, setSwipes] = useState(0);
   const [swipeAnimation, setSwipeAnimation] = useState<'left' | 'right' | ''>('');
+  const [rewinding, setRewinding] = useState(false);
   const [matchedProfile, setMatchedProfile] = useState<UserProfile | null>(null);
   const [showMatchDialog, setShowMatchDialog] = useState(false);
   const { toast } = useToast();
@@ -244,14 +248,18 @@ export default function SwipePage() {
         particleCount: 28,
         spread: 60,
         origin: { x: 0.65, y: 0.65 },
-        colors: ['#10b981', '#34d399', '#6ee7b7', '#f59e0b', '#38bdf8'],
+        colors: ['#ff7a9a', '#ffd83f', '#7a56bd', '#2fb84a', '#f2572b'],
+        shapes: ['square'],
+        flat: true,
         ticks: 140,
         gravity: 0.9,
-        scalar: 0.9,
+        scalar: 1.2,
+        disableForReducedMotion: true,
       });
     }
 
     // Instant Optimistic UI: Trigger animation & advance card with smooth timing
+    setRewinding(false);
     setSwipeAnimation(action === 'like' ? 'right' : 'left');
     setSwipedIds(prev => new Set(prev).add(swipedProfile.id));
     setSwipes(prev => prev + 1);
@@ -356,6 +364,7 @@ export default function SwipePage() {
   
   const handleUndo = () => {
     if (currentIndex > 0) {
+      setRewinding(true);
       setCurrentIndex(currentIndex - 1);
       if(swipes > 0) setSwipes(swipes - 1);
       toast({ title: 'Undid last swipe.'});
@@ -366,6 +375,34 @@ export default function SwipePage() {
   const limitReached = swipes >= SWIPE_LIMIT;
   const noMoreProfiles = !currentProfile && !loading;
 
+  const swipeLocked = limitReached || !!swipeAnimation || !currentProfile;
+  const { ref: dragRef, handlers: dragHandlers } = useSwipeDrag({
+    onSwipe: (direction) => handleSwipe(direction === 'right' ? 'like' : 'dislike'),
+    disabled: swipeLocked,
+  });
+
+  // Keyboard swiping, ignored while typing or while a dialog or the filter panel is open.
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey) return;
+      const target = e.target as HTMLElement | null;
+      if (target?.closest('input, textarea, select, [contenteditable="true"]')) return;
+      if (document.querySelector('[role="dialog"], [role="alertdialog"], [role="listbox"], [role="menu"]')) return;
+
+      if (e.key === 'ArrowLeft' && !swipeLocked) {
+        e.preventDefault();
+        handleSwipe('dislike');
+      } else if (e.key === 'ArrowRight' && !swipeLocked) {
+        e.preventDefault();
+        handleSwipe('like');
+      } else if (e.key.toLowerCase() === 'z' && !swipeLocked && currentIndex > 0) {
+        handleUndo();
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  });
+
   const animationClass = 
       swipeAnimation === 'left' ? 'animate-swipe-out-left' : 
       swipeAnimation === 'right' ? 'animate-swipe-out-right' : 
@@ -373,6 +410,7 @@ export default function SwipePage() {
 
   return (
     <main className="container mx-auto p-4 md:p-8">
+      <h1 className="sr-only">Swipe through profiles</h1>
       <div className="flex flex-col items-center justify-start space-y-6">
         <div className="w-full max-w-sm flex justify-end">
           <Sheet>
@@ -512,12 +550,10 @@ export default function SwipePage() {
         </CardContent>
       </Card>
     ) : limitReached || noMoreProfiles ? (
-      <Card className="flex flex-col items-center justify-center text-center h-[min(520px,70vh)] p-6 shadow-xl border-border/80">
-        <div className="w-14 h-14 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary mb-3 shadow-sm">
-          <Users className="w-7 h-7" />
-        </div>
+      <Card className="flex flex-col items-center justify-center text-center h-[min(520px,70vh)] p-6">
+        <Stacky className="mb-3 w-20" />
         <CardHeader className="p-0 space-y-1 mb-4">
-          <CardTitle className="font-headline text-xl sm:text-2xl font-bold tracking-tight">
+          <CardTitle className="font-headline text-4xl font-bold leading-none">
             {!noMoreProfiles
               ? "You're Out of Swipes!"
               : loadError
@@ -547,16 +583,16 @@ export default function SwipePage() {
             variant="secondary"
             size="sm"
             onClick={handlePreviewMatch}
-            className="w-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 hover:bg-emerald-500/20"
+            className="w-full"
           >
-            <PartyPopper className="w-3.5 h-3.5 mr-1.5 text-emerald-400" />
+            <PartyPopper className="w-4 h-4 mr-1.5" />
             Preview Match Handshake Animation
           </Button>
           <Button
             variant="outline"
             size="sm"
             onClick={() => fetchProfiles()}
-            className="w-full text-xs text-muted-foreground"
+            className="w-full"
           >
             <RotateCcw className="w-3.5 h-3.5 mr-1.5" />
             Check for New Profiles
@@ -564,42 +600,58 @@ export default function SwipePage() {
         </CardContent>
       </Card>
     ) : (
-      <div
-        className={cn(
-          'relative w-full h-[min(520px,70vh)] overflow-hidden rounded-2xl',
-          animationClass
-        )}
-      >
-        {/* SWIPE RIGHT OVERLAY: SPARKLES & CONNECT STAMP */}
-        {swipeAnimation === 'right' && (
-          <div className="pointer-events-none absolute inset-0 z-40 flex items-center justify-center bg-emerald-500/15 rounded-2xl border-2 border-emerald-500/60 backdrop-blur-[1px] shadow-[0_0_35px_rgba(16,185,129,0.5)]">
-            <div className="animate-stamp-pop border-4 border-emerald-400 bg-emerald-950/95 text-emerald-300 font-black text-2xl sm:text-3xl px-6 py-2.5 rounded-2xl shadow-[0_0_35px_rgba(16,185,129,0.9)] flex items-center gap-2.5 tracking-widest uppercase">
-              <Sparkles className="w-7 h-7 text-emerald-400 animate-spin" />
-              CONNECT
-            </div>
-            {/* Floating Sparkles & Sprinkles */}
-            <span className="absolute top-1/4 left-1/4 text-2xl animate-sparkle-float">✨</span>
-            <span className="absolute top-1/3 right-1/4 text-xl animate-sparkle-float" style={{ animationDelay: '80ms' }}>🌟</span>
-            <span className="absolute bottom-1/3 left-1/3 text-2xl animate-sparkle-float" style={{ animationDelay: '120ms' }}>💚</span>
-            <span className="absolute top-1/2 right-1/3 text-xl animate-sparkle-float" style={{ animationDelay: '160ms' }}>⚡</span>
-          </div>
+      <div className="relative h-[min(520px,70vh)] w-full">
+        {/* The next card waits underneath */}
+        {filteredProfiles[currentIndex + 1] && (
+          <div aria-hidden="true" className="px-box absolute inset-0 translate-x-2 translate-y-2 rotate-1 bg-secondary" />
         )}
 
-        {/* SWIPE LEFT OVERLAY: APPT TECH DEFER / DISMISS STAMP */}
-        {swipeAnimation === 'left' && (
-          <div className="pointer-events-none absolute inset-0 z-40 flex items-center justify-center bg-slate-900/40 rounded-2xl border-2 border-slate-500/40 backdrop-blur-[1px] shadow-[0_0_20px_rgba(148,163,184,0.3)]">
-            <div className="animate-stamp-pop-left border-4 border-slate-400 bg-slate-950/95 text-slate-200 font-black text-2xl sm:text-3xl px-6 py-2.5 rounded-2xl shadow-[0_0_25px_rgba(148,163,184,0.5)] flex items-center gap-2.5 tracking-widest uppercase">
-              <RotateCcw className="w-6 h-6 text-slate-400" />
-              DEFERRED
-            </div>
-            {/* Drifting smoke & wind sprinkles */}
-            <span className="absolute top-1/3 right-1/3 text-lg opacity-60 animate-sparkle-float">💨</span>
-            <span className="absolute bottom-1/2 left-1/4 text-sm opacity-40 animate-sparkle-float" style={{ animationDelay: '90ms' }}>💭</span>
-          </div>
-        )}
+        <div
+          key={currentProfile.id}
+          ref={dragRef}
+          {...dragHandlers}
+          className={cn(
+            'px-swipe-card px-raised absolute inset-0 cursor-grab overflow-hidden bg-card active:cursor-grabbing',
+            swipeAnimation ? animationClass : rewinding ? 'animate-rewind' : 'animate-card-in'
+          )}
+        >
+          <PixelDissolve active={!!swipeAnimation} />
 
-        <div className="h-full w-full overflow-y-auto">
-          <ProfileCard profile={currentProfile} />
+          {/* Stamps fade in with the drag */}
+          <div aria-hidden="true" className="px-stamp-like pointer-events-none absolute left-1/2 top-16 z-40 -translate-x-1/2 -rotate-[8deg] border-4 border-[color:var(--c-ink)] bg-[color:var(--c-leaf)] px-4 py-1 font-label text-2xl text-[color:var(--c-ink)]">
+            CONNECT
+          </div>
+          <div aria-hidden="true" className="px-stamp-nope pointer-events-none absolute left-1/2 top-16 z-40 -translate-x-1/2 rotate-[8deg] border-4 border-[color:var(--c-ink)] bg-card px-4 py-1 font-label text-2xl text-card-foreground">
+            DEFERRED
+          </div>
+
+          {/* SWIPE RIGHT OVERLAY: CONNECT STAMP */}
+          {swipeAnimation === 'right' && (
+            <div className="pointer-events-none absolute inset-0 z-40 flex items-center justify-center">
+              <div className="animate-stamp-pop flex items-center gap-2 border-4 border-[color:var(--c-ink)] bg-[color:var(--c-leaf)] px-5 py-2 font-label text-2xl text-[color:var(--c-ink)] sm:text-3xl">
+                <Sparkles className="h-7 w-7" />
+                CONNECT
+              </div>
+              <PixelStar className="animate-sparkle-float absolute left-1/4 top-1/4 h-8 w-8" />
+              <PixelHeart className="animate-sparkle-float absolute right-1/4 top-1/3 h-7 w-7 [animation-delay:80ms]" />
+              <PixelStar className="animate-sparkle-float absolute bottom-1/3 left-1/3 h-6 w-6 [animation-delay:120ms]" />
+              <PixelHeart className="animate-sparkle-float absolute right-1/3 top-1/2 h-6 w-6 [animation-delay:160ms]" />
+            </div>
+          )}
+
+          {/* SWIPE LEFT OVERLAY: DEFERRED STAMP */}
+          {swipeAnimation === 'left' && (
+            <div className="pointer-events-none absolute inset-0 z-40 flex items-center justify-center">
+              <div className="animate-stamp-pop-left flex items-center gap-2 border-4 border-[color:var(--c-ink)] bg-card px-5 py-2 font-label text-2xl text-card-foreground sm:text-3xl">
+                <RotateCcw className="h-6 w-6" />
+                DEFERRED
+              </div>
+            </div>
+          )}
+
+          <div className="h-full w-full overflow-y-auto">
+            <ProfileCard profile={currentProfile} />
+          </div>
         </div>
       </div>
     )}
@@ -607,19 +659,25 @@ export default function SwipePage() {
 
 
           <div className="flex flex-col items-center space-y-4">
-            <div className="flex items-center justify-center space-x-4">
-                <Button variant="outline" size="icon" className="h-16 w-16 rounded-full border-2 border-yellow-500 text-yellow-500 hover:bg-yellow-100 hover:text-yellow-600 transition-all hover:scale-105 active:scale-95" onClick={() => handleSwipe('dislike')} disabled={limitReached || !!swipeAnimation || !currentProfile}>
+            <div className="flex items-center justify-center space-x-5">
+                <Button variant="outline" size="icon" aria-label="Defer this profile" className="h-16 w-16" onClick={() => handleSwipe('dislike')} disabled={limitReached || !!swipeAnimation || !currentProfile}>
                     <XIcon className="h-8 w-8" />
                 </Button>
-                <Button variant="outline" size="icon" className="h-12 w-12 rounded-full border-2 hover:scale-105 active:scale-95 transition-all" onClick={handleUndo} disabled={currentIndex === 0 || limitReached || !!swipeAnimation || !currentProfile}>
+                <Button variant="secondary" size="icon" aria-label="Undo last swipe" className="h-12 w-12" onClick={handleUndo} disabled={currentIndex === 0 || limitReached || !!swipeAnimation || !currentProfile}>
                     <Undo className="h-6 w-6" />
                 </Button>
-                <Button variant="outline" size="icon" className="h-16 w-16 rounded-full border-2 border-green-500 text-green-500 hover:bg-green-100 hover:text-green-600 transition-all hover:scale-105 active:scale-95 shadow-sm shadow-green-500/20" onClick={() => handleSwipe('like')} disabled={limitReached || !!swipeAnimation || !currentProfile}>
+                <Button size="icon" aria-label="Connect with this profile" className="h-16 w-16" onClick={() => handleSwipe('like')} disabled={limitReached || !!swipeAnimation || !currentProfile}>
                     <Heart className="h-8 w-8" />
                 </Button>
             </div>
-            <div className="text-center text-muted-foreground h-5">
-                {!limitReached && !noMoreProfiles && <p>Swipes remaining: {SWIPE_LIMIT - swipes} / {SWIPE_LIMIT}</p>}
+            <div className="flex min-h-12 flex-col items-center gap-2 text-center text-sm text-muted-foreground">
+                {!limitReached && !noMoreProfiles && (
+                  <>
+                    <CoinRow total={SWIPE_LIMIT} used={swipes} />
+                    <p>Swipes remaining: {SWIPE_LIMIT - swipes} / {SWIPE_LIMIT}</p>
+                    <p className="hidden text-xs md:block">Drag the card, or use the arrow keys. Z to undo.</p>
+                  </>
+                )}
             </div>
           </div>
         </div>

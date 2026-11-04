@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Progress } from '@/components/ui/progress';
+import { Stacky } from '@/components/pixel/sprites';
 import { Label } from '@/components/ui/label';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -528,16 +529,14 @@ export default function OnboardingPage() {
   const photoURL = form.watch('photoURL');
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-background via-muted/20 to-background p-4 sm:p-6">
-      <Card className="w-full max-w-xl shadow-2xl border-border/70 backdrop-blur-md bg-card/95">
+    <div className="min-h-screen flex items-center justify-center bg-grid p-4 sm:p-6">
+      <Card className="w-full max-w-xl bg-card">
         <CardHeader className="space-y-3 pb-4">
           {/* Header Action Bar */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                <Sparkles className="h-4 w-4" />
-              </div>
-              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <Stacky className="w-9" />
+              <span className="font-label text-xs text-foreground">
                 Step {step + 1} of {allSteps.length}
               </span>
             </div>
@@ -554,18 +553,18 @@ export default function OnboardingPage() {
             </Button>
           </div>
 
-          <Progress value={progress} className="h-2 rounded-full" />
+          <Progress value={progress} className="h-4 border-2 border-foreground bg-card" />
 
           {/* Stepper Dots */}
           <div className="flex justify-between items-center pt-1 px-1">
             {allSteps.map((s, idx) => (
               <div key={s.id} className="flex flex-col items-center">
                 <div
-                  className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold transition-all ${
+                  className={`w-7 h-7 border-2 border-foreground flex items-center justify-center font-headline text-base font-bold transition-colors duration-150 ${
                     idx < step
                       ? 'bg-primary text-primary-foreground'
                       : idx === step
-                      ? 'bg-primary/20 text-primary border-2 border-primary'
+                      ? 'bg-accent text-accent-foreground'
                       : 'bg-muted text-muted-foreground'
                   }`}
                 >
@@ -580,19 +579,19 @@ export default function OnboardingPage() {
 
           {/* Resume notification banner */}
           {resumedStep !== null && (
-            <div className="rounded-lg bg-primary/10 border border-primary/25 px-3 py-2 flex items-center justify-between text-xs text-primary mt-2">
+            <div className="border-2 bg-secondary px-3 py-2 flex items-center justify-between text-xs text-secondary-foreground mt-2">
               <span className="flex items-center gap-1.5 font-medium">
                 <BookmarkCheck className="h-4 w-4" />
                 Resumed from your previously saved progress (Step {resumedStep + 1})
               </span>
-              <Badge variant="outline" className="border-primary/40 text-[10px] px-1.5 py-0">
+              <Badge variant="outline" className="text-[10px] px-1.5 py-0">
                 Auto-saved
               </Badge>
             </div>
           )}
 
           <div>
-            <CardTitle className="font-headline text-2xl font-bold tracking-tight">
+            <CardTitle key={step} className="animate-step-in font-headline text-4xl font-bold leading-none">
               {allSteps[step].name}
             </CardTitle>
             <CardDescription className="text-sm mt-1">
@@ -606,7 +605,7 @@ export default function OnboardingPage() {
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
               {/* STEP 1: PROFILE BASICS */}
               {step === 0 && (
-                <div className="space-y-4">
+                <div className="animate-step-in space-y-4">
                   <FormField
                     control={form.control}
                     name="name"
@@ -787,7 +786,7 @@ export default function OnboardingPage() {
 
               {/* STEP 3: WORK & SKILLS */}
               {step === 2 && (
-                <div className="space-y-4">
+                <div className="animate-step-in space-y-4">
                   <FormField
                     control={form.control}
                     name="currentWork"
@@ -961,7 +960,7 @@ export default function OnboardingPage() {
 
               {/* STEP 4: SOCIAL LINKS */}
               {step === 3 && (
-                <div className="space-y-4">
+                <div className="animate-step-in space-y-4">
                   <FormField
                     control={form.control}
                     name="github"

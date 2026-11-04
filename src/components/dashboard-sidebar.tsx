@@ -44,17 +44,28 @@ export function DashboardSidebar() {
     return pathname.startsWith(href);
   };
 
+  const activeIndex = menuItems.findIndex((item) => isActive(item.href));
+
   return (
     <Sidebar>
       <SidebarHeader>
         <div className="flex items-center gap-2">
-          <Icons.logo className="size-8 text-primary" />
-          <span className="font-headline text-xl font-semibold">
+          <Icons.logo className="size-8" />
+          <span className="font-headline text-3xl font-bold">
             StackSwipe
           </span>
         </div>
       </SidebarHeader>
       <SidebarContent>
+        <div className="relative">
+        {/* Butter block that slides to the current tab */}
+        {activeIndex >= 0 && (
+          <div
+            aria-hidden="true"
+            className="absolute inset-x-0 top-0 h-10 bg-accent transition-transform duration-200 ease-out"
+            style={{ transform: `translateY(${activeIndex * 44}px)` }}
+          />
+        )}
         <SidebarMenu>
           {menuItems.map((item) => (
             <SidebarMenuItem key={item.href}>
@@ -62,6 +73,7 @@ export function DashboardSidebar() {
                 asChild
                 isActive={isActive(item.href)}
                 tooltip={{ children: item.label, side: 'right' }}
+                className="relative z-10 transition-transform duration-100 hover:translate-x-1 data-[active=true]:bg-transparent"
               >
                 <Link href={item.href} prefetch={true}>
                   <item.icon />
@@ -71,6 +83,7 @@ export function DashboardSidebar() {
             </SidebarMenuItem>
           ))}
         </SidebarMenu>
+        </div>
       </SidebarContent>
       <SidebarSeparator />
       <SidebarFooter>

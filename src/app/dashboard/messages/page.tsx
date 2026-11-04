@@ -562,7 +562,7 @@ function MessagesContent() {
   return (
     <div className="h-full flex-1 min-h-0 p-2 sm:p-3 overflow-hidden grid grid-cols-1 md:grid-cols-12 gap-3">
       {/* LEFT: conversation list */}
-      <Card className="flex flex-col h-full min-h-0 overflow-hidden border-border/70 bg-background/80 rounded-2xl md:col-span-4 lg:col-span-3">
+      <Card className="flex flex-col h-full min-h-0 overflow-hidden bg-card md:col-span-4 lg:col-span-3">
         <CardHeader className="flex-shrink-0 border-b p-3">
           <div className="relative">
             <Search className="pointer-events-none absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -602,13 +602,13 @@ function MessagesContent() {
                     className={cn(
                       'flex w-full items-center gap-3 rounded-xl p-3 text-left text-sm transition-all',
                       'hover:bg-accent/70',
-                      isSelected && 'bg-accent/90 border border-white/10 shadow-sm'
+                      isSelected && 'bg-accent text-accent-foreground'
                     )}
                   >
                     <div className="relative">
-                      <Avatar className="h-10 w-10 border border-white/10">
+                      <Avatar className="h-10 w-10 border-2">
                         <AvatarImage src={matchUser.photoURL} alt={matchUser.name} />
-                        <AvatarFallback className="bg-emerald-500/20 text-emerald-300 font-bold">
+                        <AvatarFallback className="bg-accent font-headline text-xl font-bold text-accent-foreground">
                           {matchUser.name?.charAt(0) ?? '?'}
                         </AvatarFallback>
                       </Avatar>
@@ -635,7 +635,7 @@ function MessagesContent() {
       </Card>
 
       {/* RIGHT: active conversation */}
-      <Card className="flex flex-col h-full min-h-0 overflow-hidden border-border/70 bg-background/80 rounded-2xl md:col-span-8 lg:col-span-9">
+      <Card className="flex flex-col h-full min-h-0 overflow-hidden bg-card md:col-span-8 lg:col-span-9">
         {activeConversation && otherUser ? (
           <>
             {/* Conversation Header */}
@@ -644,16 +644,16 @@ function MessagesContent() {
                 <DialogTrigger asChild>
                   <button className="flex items-center gap-3 rounded-xl p-1.5 text-left transition-colors hover:bg-accent/60 group">
                     <div className="relative">
-                      <Avatar className="h-10 w-10 border border-white/10 shadow-sm">
+                      <Avatar className="h-10 w-10 border-2">
                         <AvatarImage src={otherUser.photoURL} alt={otherUser.name} />
-                        <AvatarFallback className="bg-emerald-500/20 text-emerald-300 font-bold">
+                        <AvatarFallback className="bg-accent font-headline text-xl font-bold text-accent-foreground">
                           {otherUser.name?.charAt(0) ?? '?'}
                         </AvatarFallback>
                       </Avatar>
                       <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-background animate-pulse" />
                     </div>
                     <div>
-                      <h2 className="text-sm sm:text-base font-semibold group-hover:text-emerald-400 transition-colors flex items-center gap-1.5">
+                      <h2 className="text-sm sm:text-base font-semibold group-hover:underline flex items-center gap-1.5">
                         {otherUser.name}
                       </h2>
                       <p className="text-xs text-muted-foreground truncate max-w-[280px] sm:max-w-md">
@@ -662,7 +662,7 @@ function MessagesContent() {
                     </div>
                   </button>
                 </DialogTrigger>
-                <DialogContent className="flex h-[85vh] max-h-[85vh] w-[94vw] max-w-lg flex-col p-0 overflow-hidden rounded-3xl border border-white/10 bg-slate-950 text-slate-100 shadow-2xl">
+                <DialogContent className="flex h-[85vh] max-h-[85vh] w-[94vw] max-w-lg flex-col p-0 overflow-hidden bg-card text-card-foreground">
                   <DialogHeader className="sr-only">
                     <DialogTitle>User Profile: {otherUser.name}</DialogTitle>
                     <DialogDescription>
@@ -689,7 +689,7 @@ function MessagesContent() {
                 <div className="p-4 space-y-3">
                   {loadingMessages && messages.length === 0 && (
                     <div className="py-8 text-center text-xs text-muted-foreground flex flex-col items-center gap-2">
-                      <Clock className="w-4 h-4 animate-spin text-emerald-400" />
+                      <Clock className="w-4 h-4 animate-spin" />
                       Loading your conversation history…
                     </div>
                   )}
@@ -719,7 +719,7 @@ function MessagesContent() {
                         {/* Date Divider */}
                         {showDateSeparator && (
                           <div className="flex justify-center my-4 select-none">
-                            <span className="rounded-full border border-white/10 bg-slate-900/80 px-3.5 py-1 text-[11px] font-semibold text-slate-400 shadow-sm backdrop-blur-md">
+                            <span className="border-2 bg-card px-3 py-1 font-label text-[10px] text-foreground">
                               {currentDateLabel}
                             </span>
                           </div>
@@ -733,9 +733,9 @@ function MessagesContent() {
                           )}
                         >
                           {!isCurrentUser && (
-                            <Avatar className="h-7 w-7 border border-white/10 flex-shrink-0">
+                            <Avatar className="h-7 w-7 flex-shrink-0 border-2">
                               <AvatarImage src={otherUser.photoURL} alt={otherUser.name} />
-                              <AvatarFallback className="bg-emerald-500/20 text-emerald-300 text-xs">
+                              <AvatarFallback className="bg-accent text-xs text-accent-foreground">
                                 {otherUser.name?.charAt(0) ?? '?'}
                               </AvatarFallback>
                             </Avatar>
@@ -743,15 +743,15 @@ function MessagesContent() {
 
                           <div
                             className={cn(
-                              'group relative max-w-[82%] sm:max-w-[70%] rounded-2xl px-4 py-2.5 text-sm shadow-sm transition-all',
+                              'group relative max-w-[82%] sm:max-w-[70%] animate-pop border-2 px-4 py-2.5 text-sm',
                               isCurrentUser
-                                ? 'rounded-br-sm bg-gradient-to-r from-emerald-600 to-teal-600 text-white'
-                                : 'rounded-bl-sm border border-white/10 bg-slate-900/90 text-slate-100 backdrop-blur-md'
+                                ? 'bg-primary text-primary-foreground'
+                                : 'bg-card text-card-foreground'
                             )}
                           >
                             {/* Image inside message if present */}
                             {message.imageUrl && (
-                              <div className="relative mb-2 overflow-hidden rounded-xl border border-white/15 bg-black/40 group/img">
+                              <div className="relative mb-2 overflow-hidden border-2 bg-black/40 group/img">
                                 <img
                                   src={message.imageUrl}
                                   alt="Attachment"
@@ -779,17 +779,17 @@ function MessagesContent() {
                             <div
                               className={cn(
                                 'mt-1 flex items-center gap-1 text-[10px] opacity-80',
-                                isCurrentUser ? 'justify-end text-emerald-100' : 'justify-start text-slate-400'
+                                isCurrentUser ? 'justify-end' : 'justify-start text-muted-foreground'
                               )}
                             >
                               <span>{formattedTime}</span>
                               {isCurrentUser && (
                                 <span className="ml-0.5 inline-flex items-center">
                                   {isSendingTemp ? (
-                                    <Clock className="h-3 w-3 animate-spin text-emerald-200" />
+                                    <Clock className="h-3 w-3 animate-spin" />
                                   ) : message.read ? (
                                     <span title="Read">
-                                      <CheckCheck className="h-3.5 w-3.5 text-sky-300" />
+                                      <CheckCheck className="h-3.5 w-3.5" />
                                     </span>
                                   ) : (
                                     <span title="Delivered">
@@ -810,7 +810,7 @@ function MessagesContent() {
 
             {/* AI Suggestions Toolbar */}
             {activeConversation && otherUser && profile && (
-              <div className="flex-shrink-0 space-y-1.5 border-t border-white/10 px-3 py-1.5 bg-background/50">
+              <div className="flex-shrink-0 space-y-1.5 border-t-2 px-3 py-1.5 bg-background">
                 <AiConversationSuggestions
                   currentUser={profile}
                   otherUser={otherUser}
@@ -821,8 +821,8 @@ function MessagesContent() {
 
             {/* Selected Image Attachment Preview Banner */}
             {selectedImage && (
-              <div className="flex-shrink-0 flex items-center gap-3 border-t border-white/10 bg-slate-900/90 px-3 py-2 backdrop-blur-md animate-in slide-in-from-bottom-2">
-                <div className="relative h-14 w-14 overflow-hidden rounded-xl border border-white/20 shadow-md flex-shrink-0">
+              <div className="flex-shrink-0 flex items-center gap-3 border-t-2 bg-muted px-3 py-2 animate-in slide-in-from-bottom-2">
+                <div className="relative h-14 w-14 overflow-hidden border-2 flex-shrink-0">
                   <img
                     src={selectedImage.previewUrl}
                     alt="Preview"
@@ -838,10 +838,10 @@ function MessagesContent() {
                   </button>
                 </div>
                 <div className="flex-1 truncate">
-                  <p className="text-xs font-semibold text-white truncate">
+                  <p className="text-xs font-semibold text-foreground truncate">
                     {selectedImage.file.name}
                   </p>
-                  <p className="text-[10px] text-slate-400">
+                  <p className="text-[10px] text-muted-foreground">
                     {(selectedImage.file.size / 1024).toFixed(0)} KB • Ready to send with message
                   </p>
                 </div>
@@ -849,7 +849,7 @@ function MessagesContent() {
             )}
 
             {/* Input & Send Bar */}
-            <div className="flex-shrink-0 border-t border-white/10 p-2.5 sm:p-3 bg-background/90 backdrop-blur-md">
+            <div className="flex-shrink-0 border-t-2 p-2.5 sm:p-3 bg-card">
               <form
                 onSubmit={handleSendMessage}
                 className="flex items-center gap-2"
@@ -868,7 +868,7 @@ function MessagesContent() {
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-muted-foreground hover:bg-white/10 hover:text-emerald-400 transition-colors"
+                  className="flex h-9 w-9 items-center justify-center border-2 bg-card text-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
                   title="Attach an image"
                 >
                   <ImageIcon className="h-4 w-4" />
@@ -891,7 +891,7 @@ function MessagesContent() {
                 <Button
                   type="submit"
                   size="icon"
-                  className="rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-slate-950 font-bold shadow-md shadow-emerald-500/20"
+                  
                   disabled={(!newMessage.trim() && !selectedImage) || isSending}
                 >
                   <Send className="h-4 w-4" />

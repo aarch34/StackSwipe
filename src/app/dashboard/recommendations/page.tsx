@@ -35,7 +35,44 @@ const SUGGESTED_PROMPTS = [
   'Give me 5 great icebreaker questions to ask senior devs',
 ];
 
+/** Reveals a new StackBot reply with a blocky cursor. Finishes within about 3 seconds at any length. */
+function TypeIn({ text, onTick, onDone }: { text: string; onTick: () => void; onDone: () => void }) {
+  const [shown, setShown] = useState(0);
+  const latest = useRef({ onTick, onDone });
+  latest.current = { onTick, onDone };
+
+  useEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      latest.current.onDone();
+      return;
+    }
+    const step = Math.max(2, Math.ceil(text.length / 120));
+    let count = 0;
+    const timer = setInterval(() => {
+      count = Math.min(text.length, count + step);
+      setShown(count);
+      latest.current.onTick();
+      if (count >= text.length) {
+        clearInterval(timer);
+        latest.current.onDone();
+      }
+    }, 24);
+    return () => clearInterval(timer);
+  }, [text]);
+
+  return (
+    <div>
+      <span className="sr-only" aria-live="polite">{text}</span>
+      <div aria-hidden="true">
+        <ChatMarkdown content={text.slice(0, shown)} />
+        <span className="px-cursor text-sm" />
+      </div>
+    </div>
+  );
+}
+
 export default function StackBotPage() {
+  const [typingId, setTypingId] = useState<string | null>(null);
   const { toast } = useToast();
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -128,6 +165,7 @@ export default function StackBotPage() {
         timestamp: new Date(),
       };
 
+      setTypingId(botMessage.id);
       setMessages((prev) => [...prev, botMessage]);
     } catch (err: any) {
       console.error('Chatbot response error:', err);
@@ -160,24 +198,23 @@ export default function StackBotPage() {
 
   return (
     <div className="container mx-auto p-3 sm:p-6 lg:p-8 max-w-5xl h-[calc(100vh-4rem)] flex flex-col">
-      <Card className="flex-1 flex flex-col overflow-hidden border-border/80 shadow-2xl backdrop-blur-xl bg-card/95">
+      <Card className="flex-1 flex flex-col overflow-hidden bg-card">
         {/* HEADER */}
-        <CardHeader className="flex-shrink-0 border-b border-border/70 py-3.5 px-4 sm:px-6">
+        <CardHeader className="flex-shrink-0 border-b-2 py-3.5 px-4 sm:px-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 border border-primary/20 text-primary shadow-sm">
                 <Bot className="h-5 w-5" />
                 <span className="absolute -bottom-0.5 -right-0.5 flex h-3 w-3">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                  <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500 border-2 border-card" />
+                                    <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500 border-2 border-card" />
                 </span>
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <CardTitle className="font-headline text-lg sm:text-xl font-bold tracking-tight">
+                  <CardTitle className="font-headline text-3xl font-bold">
                     StackBot
                   </CardTitle>
-                  <Badge variant="outline" className="text-[10px] py-0 px-1.5 border-primary/30 text-primary font-medium">
+                  <Badge variant="outline" className="text-[10px] py-0 px-1.5 font-medium">
                     AI Assistant
                   </Badge>
                 </div>
@@ -228,10 +265,10 @@ export default function StackBotPage() {
                     } max-w-[88%] sm:max-w-[80%]`}
                   >
                     <div
-                      className={`relative rounded-2xl px-4 py-3 shadow-sm transition-all ${
+                      className={`relative animate-pop border-2 px-4 py-3 ${
                         message.isUser
-                          ? 'bg-primary text-primary-foreground font-medium rounded-tr-sm'
-                          : 'bg-card border border-border/80 text-foreground rounded-tl-sm'
+                          ? 'bg-primary text-primary-foreground font-medium'
+                          : 'bg-card text-foreground'
                       }`}
                     >
                       {message.isUser ? (
@@ -239,7 +276,15 @@ export default function StackBotPage() {
                           {message.text}
                         </p>
                       ) : (
-                        <ChatMarkdown content={message.text} />
+                        message.id === typingId ? (
+                          <TypeIn
+                            text={message.text}
+                            onTick={() => messagesEndRef.current?.scrollIntoView({ block: 'end' })}
+                            onDone={() => setTypingId(null)}
+                          />
+                        ) : (
+                          <ChatMarkdown content={message.text} />
+                        )
                       )}
                     </div>
 
@@ -258,13 +303,13 @@ export default function StackBotPage() {
                         <button
                           type="button"
                           onClick={() => handleCopyMessage(message.id, message.text)}
-                          className="opacity-0 group-hover:opacity-100 hover:text-foreground transition-opacity flex items-center gap-1 text-[11px]"
+                          className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100 hover:text-foreground transition-opacity flex items-center gap-1 text-[11px]"
                           title="Copy response"
                         >
                           {copiedId === message.id ? (
                             <>
-                              <Check className="h-3 w-3 text-emerald-500" />
-                              <span className="text-emerald-500">Copied</span>
+                              <Check className="h-3 w-3" />
+                              <span>Copied</span>
                             </>
                           ) : (
                             <>
@@ -296,9 +341,13 @@ export default function StackBotPage() {
                       <Bot className="h-4 w-4" />
                     </AvatarFallback>
                   </Avatar>
-                  <div className="bg-card border border-border/80 rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm flex items-center gap-2.5">
-                    <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                    <span className="text-xs font-medium text-muted-foreground animate-pulse">
+                  <div className="animate-pop bg-card border-2 px-4 py-3 flex items-center gap-2.5">
+                    <span className="flex items-center gap-1" aria-hidden="true">
+                      <i className="px-typing-dot" />
+                      <i className="px-typing-dot" />
+                      <i className="px-typing-dot" />
+                    </span>
+                    <span className="text-xs font-medium text-muted-foreground">
                       StackBot is formulating a response…
                     </span>
                   </div>

@@ -74,29 +74,29 @@ export function AiConversationSuggestions({
         onClick={generateSuggestions}
         disabled={loading}
         className={cn(
-          'w-full h-7 sm:h-8 rounded-lg border border-emerald-500/30 bg-emerald-500/10 text-emerald-300 transition-all shadow-sm text-xs py-1',
-          'hover:bg-emerald-500/20 hover:border-emerald-500/50 hover:text-emerald-200',
-          showSuggestions && 'border-emerald-500/60 bg-emerald-500/20'
+          'w-full h-8 border-2 bg-secondary text-secondary-foreground text-sm py-1',
+          'hover:bg-accent hover:text-accent-foreground',
+          showSuggestions && 'bg-accent text-accent-foreground'
         )}
       >
         {loading ? (
-          <Loader2 className="h-4 w-4 mr-2 animate-spin text-emerald-400" />
+          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
         ) : (
           <Zap className="h-4 w-4 mr-2 text-amber-400 animate-pulse fill-amber-400" />
         )}
         <span className="font-semibold">
           {loading ? 'Igniting Sparks…' : '⚡ Stack Sparks'}
         </span>
-        <span className="ml-2 text-[11px] font-normal text-emerald-400/80 hidden sm:inline">
+        <span className="ml-2 text-[11px] font-normal hidden sm:inline">
           (Personalized AI Icebreakers)
         </span>
       </Button>
 
       {showSuggestions && (
-        <Card className="rounded-2xl border border-emerald-500/30 bg-slate-950/95 text-slate-100 shadow-xl backdrop-blur-xl animate-in slide-in-from-bottom-2 duration-200">
-          <CardHeader className="p-3.5 pb-2 border-b border-white/10">
+        <Card className="bg-card text-card-foreground animate-in slide-in-from-bottom-2 duration-200">
+          <CardHeader className="p-3.5 pb-2 border-b-2">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-xs font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
+              <CardTitle className="font-label text-xs flex items-center gap-1.5">
                 <Sparkles className="h-3.5 w-3.5 text-amber-400" />
                 Stack Sparks for {otherUser.name.split(' ')[0]}
               </CardTitle>
@@ -104,7 +104,7 @@ export function AiConversationSuggestions({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-7 w-7 rounded-lg text-slate-400 hover:text-white hover:bg-white/10"
+                  className="h-7 w-7"
                   onClick={generateSuggestions}
                   disabled={loading}
                   title="Generate new sparks"
@@ -114,7 +114,7 @@ export function AiConversationSuggestions({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-7 w-7 rounded-lg text-slate-400 hover:text-white hover:bg-white/10"
+                  className="h-7 w-7"
                   onClick={() => setShowSuggestions(false)}
                   title="Close sparks"
                 >
@@ -127,13 +127,13 @@ export function AiConversationSuggestions({
             {suggestions.map((suggestion, index) => (
               <div
                 key={index}
-                className="group relative rounded-xl border border-white/10 bg-white/[0.04] p-3 text-sm text-slate-200 transition-all hover:border-emerald-500/40 hover:bg-emerald-500/10 cursor-pointer flex flex-col gap-1.5"
+                className="group relative border-2 bg-background p-3 text-sm transition-colors hover:bg-accent hover:text-accent-foreground cursor-pointer flex flex-col gap-1.5"
                 onClick={() => handleSelectSuggestion(suggestion)}
               >
-                <p className="leading-relaxed text-xs sm:text-sm text-slate-200 group-hover:text-white transition-colors">
+                <p className="leading-relaxed text-xs sm:text-sm">
                   &ldquo;{suggestion}&rdquo;
                 </p>
-                <span className="self-end text-[10px] font-semibold text-emerald-400 opacity-80 group-hover:opacity-100 flex items-center gap-1">
+                <span className="self-end text-[10px] font-semibold flex items-center gap-1">
                   ⚡ Click to use spark →
                 </span>
               </div>

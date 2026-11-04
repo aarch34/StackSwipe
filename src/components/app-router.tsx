@@ -72,7 +72,7 @@ export function AppRouter({ children }: { children: React.ReactNode }) {
         return (
             <div className="flex min-h-screen items-center justify-center bg-background">
                 <div className="flex flex-col items-center gap-3">
-                    <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+                    <div className="h-8 w-8 animate-spin border-4 border-foreground border-t-transparent" />
                     <p className="text-sm font-medium text-muted-foreground">Checking your profile & network status…</p>
                 </div>
             </div>

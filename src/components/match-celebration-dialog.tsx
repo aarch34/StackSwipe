@@ -13,7 +13,8 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Sparkles, MessageSquare, Handshake, Code2, ArrowRight, Share2 } from '@/components/px-icons';
+import { HandLeft, HandRight, PixelStar } from '@/components/pixel/sprites';
+import { MessageSquare, ArrowRight } from '@/components/px-icons';
 import { UserProfile } from '@/lib/data';
 import { AuthUser } from '@/hooks/use-auth';
 
@@ -35,39 +36,25 @@ export function MatchCelebrationDialog({
   useEffect(() => {
     if (!open) return;
 
-    // Trigger celebratory particle explosion (sparkles & confetti cannons)
-    // 1. Center sparkle burst
-    confetti({
-      particleCount: 50,
-      spread: 70,
-      origin: { y: 0.6 },
-      colors: ['#10b981', '#34d399', '#6ee7b7', '#38bdf8', '#818cf8', '#f59e0b'],
-      ticks: 250,
-      gravity: 0.8,
-      scalar: 1.1,
-    });
+    // Square pixel confetti, timed to fire as the two hands meet
+    const burst = (options: confetti.Options) =>
+      confetti({
+        colors: ['#ff7a9a', '#ffd83f', '#7a56bd', '#2fb84a', '#f2572b'],
+        shapes: ['square'],
+        flat: true,
+        scalar: 1.3,
+        disableForReducedMotion: true,
+        ...options,
+      });
 
-    // 2. Left cannon after 180ms
     const timer1 = setTimeout(() => {
-      confetti({
-        particleCount: 40,
-        angle: 60,
-        spread: 55,
-        origin: { x: 0.1, y: 0.65 },
-        colors: ['#10b981', '#06b6d4', '#ec4899', '#f59e0b'],
-      });
-    }, 180);
+      burst({ particleCount: 50, spread: 70, origin: { y: 0.45 }, ticks: 220, gravity: 0.8 });
+      burst({ particleCount: 40, angle: 60, spread: 55, origin: { x: 0.1, y: 0.65 } });
+    }, 560);
 
-    // 3. Right cannon after 360ms
     const timer2 = setTimeout(() => {
-      confetti({
-        particleCount: 40,
-        angle: 120,
-        spread: 55,
-        origin: { x: 0.9, y: 0.65 },
-        colors: ['#10b981', '#8b5cf6', '#3b82f6', '#f43f5e'],
-      });
-    }, 360);
+      burst({ particleCount: 40, angle: 120, spread: 55, origin: { x: 0.9, y: 0.65 } });
+    }, 740);
 
     return () => {
       clearTimeout(timer1);
@@ -86,69 +73,54 @@ export function MatchCelebrationDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md w-full border-emerald-500/30 bg-background/95 backdrop-blur-xl p-0 overflow-hidden shadow-2xl shadow-emerald-500/10 sm:rounded-2xl">
-        {/* Glowing atmospheric header background */}
-        <div className="relative overflow-hidden px-6 pt-8 pb-6 text-center bg-gradient-to-b from-emerald-500/15 via-teal-500/5 to-transparent">
-          {/* Subtle animated sparkles badge */}
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 mb-3 shadow-sm animate-pulse">
-            <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
-            <span>200 OK · Mutual Handshake Formed</span>
+      <DialogContent className="w-full max-w-md gap-0 overflow-hidden p-0">
+        <div className="relative overflow-hidden bg-[color:var(--c-pink)] px-6 pb-6 pt-8 text-center text-[color:var(--c-ink)]">
+          <div className="mb-3 inline-flex items-center gap-1.5 bg-[color:var(--c-ink)] px-3 py-1 font-label text-xs text-[color:var(--c-cream)]">
+            200 OK: mutual handshake
           </div>
 
-          <DialogTitle className="text-2xl sm:text-3xl font-extrabold tracking-tight font-headline bg-gradient-to-r from-emerald-400 via-teal-300 to-sky-400 bg-clip-text text-transparent">
-            It&apos;s a Handshake! 🤝
+          <DialogTitle className="font-headline text-5xl font-bold leading-none sm:text-6xl">
+            It&apos;s a Handshake!
           </DialogTitle>
 
-          <DialogDescription className="mt-2 text-sm text-muted-foreground max-w-xs mx-auto">
-            You and <span className="font-semibold text-foreground">{matchedProfile.name}</span> have connected threads. Your stacks align!
+          <DialogDescription className="mx-auto mt-2 max-w-xs text-sm font-medium text-[color:var(--c-ink)]">
+            You and <span className="font-bold">{matchedProfile.name}</span> have connected threads. Your stacks align!
           </DialogDescription>
 
-          {/* DUAL AVATARS WITH CONNECTING CIRCUIT BEAM */}
-          <div className="mt-6 mb-2 flex items-center justify-center gap-4 relative">
-            {/* User Avatar */}
-            <div className="relative group">
-              <Avatar className="w-18 h-18 sm:w-20 sm:h-20 border-3 border-emerald-500 shadow-lg shadow-emerald-500/25 ring-4 ring-emerald-500/20">
-                <AvatarImage src={currentUserPhoto} alt={currentUserName} />
-                <AvatarFallback className="bg-emerald-950 text-emerald-300 font-bold text-lg">
-                  {currentUserName.slice(0, 2).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-              <div className="absolute -bottom-1 -right-1 bg-emerald-500 text-black rounded-full p-1 shadow">
-                <Sparkles className="w-3 h-3" />
-              </div>
-            </div>
+          {/* Two avatars, and two hands that walk in and shake */}
+          <div className="relative mb-1 mt-6 flex items-center justify-center gap-1">
+            <Avatar className="px-box h-20 w-20 shrink-0">
+              <AvatarImage src={currentUserPhoto} alt={currentUserName} />
+              <AvatarFallback className="bg-[color:var(--c-butter)] font-headline text-2xl font-bold text-[color:var(--c-ink)]">
+                {currentUserName.slice(0, 2).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
 
-            {/* Connecting Handshake Badge */}
-            <div className="relative flex flex-col items-center">
-              <div className="w-11 h-11 rounded-full bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-slate-950 font-bold shadow-lg shadow-emerald-500/40 animate-bounce">
-                <Handshake className="w-6 h-6" />
-              </div>
-              <span className="text-[10px] font-mono tracking-wider text-emerald-400 uppercase mt-1 font-semibold">
-                LINKED
+            <div className="relative flex w-32 shrink-0 items-center justify-center" aria-hidden="true">
+              <span className="animate-hand-left relative z-10 -mr-1 block w-16">
+                <HandLeft className="w-full" />
               </span>
+              <span className="animate-hand-right block w-16">
+                <HandRight className="w-full" />
+              </span>
+              <PixelStar className="animate-burst absolute -top-5 left-1/2 z-20 h-8 w-8 -translate-x-1/2" />
             </div>
 
-            {/* Matched Avatar */}
-            <div className="relative group">
-              <Avatar className="w-18 h-18 sm:w-20 sm:h-20 border-3 border-teal-500 shadow-lg shadow-teal-500/25 ring-4 ring-teal-500/20">
-                <AvatarImage src={matchedProfile.photoURL} alt={matchedProfile.name} />
-                <AvatarFallback className="bg-teal-950 text-teal-300 font-bold text-lg">
-                  {matchedProfile.name.slice(0, 2).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-              <div className="absolute -bottom-1 -right-1 bg-teal-400 text-black rounded-full p-1 shadow">
-                <Code2 className="w-3 h-3" />
-              </div>
-            </div>
+            <Avatar className="px-box h-20 w-20 shrink-0">
+              <AvatarImage src={matchedProfile.photoURL} alt={matchedProfile.name} />
+              <AvatarFallback className="bg-[color:var(--c-butter)] font-headline text-2xl font-bold text-[color:var(--c-ink)]">
+                {matchedProfile.name.slice(0, 2).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
           </div>
         </div>
 
         {/* Profile Details & Shared Skills */}
         <div className="px-6 py-4 space-y-4">
-          <div className="bg-card/70 border border-border/70 rounded-xl p-3.5 space-y-2.5">
+          <div className="space-y-2.5 border-2 bg-card p-3.5">
             <div className="flex items-start justify-between">
               <div>
-                <h4 className="font-semibold text-sm text-foreground">{matchedProfile.name}</h4>
+                <h4 className="font-headline text-2xl font-semibold leading-none text-foreground">{matchedProfile.name}</h4>
                 <p className="text-xs text-muted-foreground">
                   {matchedProfile.jobTitle || matchedProfile.headline || 'Software Developer'}
                   {matchedProfile.company ? ` at ${matchedProfile.company}` : ''}
@@ -167,7 +139,7 @@ export function MatchCelebrationDialog({
                 <p className="text-[11px] font-medium text-muted-foreground mb-1.5 flex items-center gap-1">
                   <span>Stack:</span>
                   {commonTech.length > 0 && (
-                    <span className="text-emerald-400 font-semibold">(Shared: {commonTech.join(', ')})</span>
+                    <span className="font-semibold text-foreground">(Shared: {commonTech.join(', ')})</span>
                   )}
                 </p>
                 <div className="flex flex-wrap gap-1.5">
@@ -176,10 +148,8 @@ export function MatchCelebrationDialog({
                     return (
                       <span
                         key={tech}
-                        className={`text-[10px] px-2 py-0.5 rounded-md font-medium border ${
-                          isShared
-                            ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30 font-semibold'
-                            : 'bg-muted/60 text-muted-foreground border-border/50'
+                        className={`border-2 px-2 py-0.5 font-headline text-sm font-medium leading-none ${
+                          isShared ? 'bg-accent text-accent-foreground' : 'bg-muted text-foreground'
                         }`}
                       >
                         {tech}
@@ -192,8 +162,8 @@ export function MatchCelebrationDialog({
           </div>
 
           {/* Quick Icebreaker suggestion */}
-          <div className="rounded-lg bg-emerald-500/5 border border-emerald-500/15 p-2.5 text-xs text-muted-foreground flex items-center gap-2">
-            <span className="text-emerald-400 font-semibold">💡 Icebreaker:</span>
+          <div className="flex items-center gap-2 border-2 bg-muted p-2.5 text-xs text-foreground">
+            <span className="font-semibold">Icebreaker:</span>
             <span className="italic truncate">
               &ldquo;Hey {matchedProfile.name}, great to connect! What are you building right now?&rdquo;
             </span>
@@ -204,12 +174,12 @@ export function MatchCelebrationDialog({
             <Button
               asChild
               size="lg"
-              className="w-full bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 hover:from-emerald-600 hover:to-teal-600 text-slate-950 font-bold shadow-lg shadow-emerald-500/25 transition-all"
+              className="w-full"
             >
               <Link href={`/dashboard/messages?userId=${matchedProfile.id}`} onClick={() => onOpenChange(false)}>
-                <MessageSquare className="w-4 h-4 mr-2 text-slate-950" />
+                <MessageSquare className="mr-2 h-5 w-5" />
                 Start Chatting Now
-                <ArrowRight className="w-4 h-4 ml-1.5 text-slate-950" />
+                <ArrowRight className="ml-1.5 h-5 w-5" />
               </Link>
             </Button>
 
@@ -217,7 +187,7 @@ export function MatchCelebrationDialog({
               variant="ghost"
               size="sm"
               onClick={() => onOpenChange(false)}
-              className="w-full text-xs text-muted-foreground hover:text-foreground"
+              className="w-full"
             >
               Keep Swiping & Discover More
             </Button>

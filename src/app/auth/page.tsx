@@ -1,4 +1,5 @@
 import { AuthForm } from '@/components/auth-form';
+import { Cloud, Flower, Stacky } from '@/components/pixel/sprites';
 
 export const metadata = {
   title: 'Join StackSwipe | Login & Sign Up',
@@ -7,13 +8,13 @@ export const metadata = {
 
 export default function AuthPage() {
   return (
-    <div className="relative min-h-screen flex items-center justify-center p-4 sm:p-6 lg:p-8 bg-gradient-to-b from-background via-background/70 to-background">
-      {/* Background radial glow */}
-      <div className="absolute inset-0 -z-10 pointer-events-none flex items-center justify-center">
-        <div className="h-[450px] w-[450px] rounded-full bg-primary/10 blur-[120px]" />
-      </div>
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[color:var(--c-pink)] p-4 sm:p-6 lg:p-8">
+      <Cloud className="px-drift absolute left-[6%] top-[10%] w-32 sm:w-44" />
+      <Cloud className="px-drift absolute bottom-[12%] right-[5%] hidden w-36 [animation-delay:-4s] sm:block" />
+      <Flower className="absolute bottom-6 left-[6%] hidden w-24 lg:block" />
 
-      <div className="w-full max-w-md py-8">
+      <div className="relative w-full max-w-md pb-8 pt-20">
+        <Stacky className="absolute right-8 top-[0.4rem] z-10 w-20" />
         <AuthForm initialMode="signup" />
       </div>
     </div>

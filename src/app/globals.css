@@ -202,6 +202,21 @@ a.px-raised:active {
 .animate-stamp-pop-left { animation: stamp-pop-left 0.25s steps(4) forwards; }
 .animate-sparkle-float { animation: float-sparkle 0.45s steps(6) forwards; }
 
+/* Pink fails contrast as text on cream, so text-primary maps to a deeper shade in light mode. */
+.text-primary,
+.hover\:text-primary:hover {
+  color: #b52c54;
+}
+
+.dark .text-primary,
+.dark .hover\:text-primary:hover {
+  color: var(--c-pink);
+}
+
+.px-typing-dot {
+  font-style: normal;
+}
+
 /* Pixel pieces */
 
 .px-edge {
