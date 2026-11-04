@@ -39,6 +39,9 @@ export default function AdminNotificationsPage() {
       if (res.ok) {
         const json = await res.json();
         setNotifications(json.notifications || []);
+      } else {
+        const err = await res.json().catch(() => ({}));
+        toast({ title: 'Error loading notifications', description: err.error || 'Failed to fetch notifications', variant: 'destructive' });
       }
     } catch (err) {
       console.error('Error fetching notifications:', err);

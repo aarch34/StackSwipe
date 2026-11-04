@@ -41,8 +41,10 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { supabase } from '@/lib/supabase';
+import { useToast } from '@/hooks/use-toast';
 
 export default function AdminAuditLogsPage() {
+  const { toast } = useToast();
   const [logs, setLogs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionFilter, setActionFilter] = useState('all');
@@ -76,6 +78,9 @@ export default function AdminAuditLogsPage() {
         setLogs(json.logs || []);
         setTotalPages(json.totalPages || 1);
         setTotalCount(json.total || 0);
+      } else {
+        const err = await res.json().catch(() => ({}));
+        toast({ title: 'Error loading audit logs', description: err.error || 'Failed to fetch audit logs', variant: 'destructive' });
       }
     } catch (err) {
       console.error('Error fetching audit logs:', err);

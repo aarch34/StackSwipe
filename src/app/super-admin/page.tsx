@@ -36,8 +36,10 @@ import {
   Legend,
 } from 'recharts';
 import { supabase } from '@/lib/supabase';
+import { useToast } from '@/hooks/use-toast';
 
 export default function SuperAdminOverviewPage() {
+  const { toast } = useToast();
   const [stats, setStats] = useState<any>(null);
   const [analyticsData, setAnalyticsData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -61,11 +63,17 @@ export default function SuperAdminOverviewPage() {
       if (overviewRes.ok) {
         const oData = await overviewRes.json();
         setStats(oData.stats);
+      } else {
+        const err = await overviewRes.json().catch(() => ({}));
+        toast({ title: 'Error loading overview', description: err.error || 'Failed to fetch dashboard stats', variant: 'destructive' });
       }
 
       if (analyticsRes.ok) {
         const aData = await analyticsRes.json();
         setAnalyticsData(aData.timeSeries || []);
+      } else {
+        const err = await analyticsRes.json().catch(() => ({}));
+        toast({ title: 'Error loading analytics', description: err.error || 'Failed to fetch analytics data', variant: 'destructive' });
       }
     } catch (err) {
       console.error('Error loading dashboard data:', err);

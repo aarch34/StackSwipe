@@ -47,6 +47,9 @@ export default function AiIcebreakersManagementPage() {
         setData(json);
         setAiEnabled(json.settings?.ai_icebreakers_enabled ?? true);
         setMaxDaily(json.settings?.max_daily_icebreakers ?? 15);
+      } else {
+        const err = await res.json().catch(() => ({}));
+        toast({ title: 'Error loading AI data', description: err.error || 'Failed to fetch AI icebreaker settings', variant: 'destructive' });
       }
     } catch (err) {
       console.error('Error loading AI data:', err);

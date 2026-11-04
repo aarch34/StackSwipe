@@ -87,6 +87,9 @@ export default function ReportsManagementPage() {
       if (res.ok) {
         const data = await res.json();
         setReports(data.reports || []);
+      } else {
+        const err = await res.json().catch(() => ({}));
+        toast({ title: 'Error loading reports', description: err.error || 'Failed to fetch reports', variant: 'destructive' });
       }
     } catch (err) {
       console.error('Error fetching reports:', err);

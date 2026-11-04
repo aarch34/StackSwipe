@@ -57,6 +57,9 @@ export default function PlatformSettingsPage() {
         setDefaultSuspensionDays(s.default_suspension_days ?? 7);
         setCommunityGuidelines(s.community_guidelines ?? '');
         setSystemAnnouncement(s.system_announcement ?? '');
+      } else {
+        const err = await res.json().catch(() => ({}));
+        toast({ title: 'Error loading settings', description: err.error || 'Failed to fetch platform settings', variant: 'destructive' });
       }
     } catch (err) {
       console.error('Error fetching settings:', err);

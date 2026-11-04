@@ -156,8 +156,13 @@ export async function PATCH(request: NextRequest) {
           ban_reason: actionReason,
         };
       } else if (action === 'warning') {
+        const { data: reportedUser } = await sb
+          .from('users')
+          .select('warning_count')
+          .eq('id', existingReport.reported_id)
+          .maybeSingle();
         userUpdate = {
-          warning_count: 1, // incremented in query
+          warning_count: (reportedUser?.warning_count || 0) + 1,
         };
       }
 

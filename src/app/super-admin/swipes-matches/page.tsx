@@ -68,6 +68,9 @@ export default function SwipesMatchesPage() {
       if (res.ok) {
         const json = await res.json();
         setData(json);
+      } else {
+        const err = await res.json().catch(() => ({}));
+        toast({ title: 'Error loading data', description: err.error || 'Failed to fetch swipes/matches', variant: 'destructive' });
       }
     } catch (err) {
       console.error('Error fetching swipes/matches data:', err);

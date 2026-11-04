@@ -129,6 +129,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           localStorage.setItem('stackswipe_cached_profile', JSON.stringify(transformedProfile));
           localStorage.setItem('stackswipe_cached_user', JSON.stringify(enrichUser(currentUser)));
         }
+
+        // Update last_active_at in background (fire-and-forget)
+        supabase
+          .from('users')
+          .update({ last_active_at: new Date().toISOString() })
+          .eq('id', data.id)
+          .then(() => {})
+          .catch(() => {});
       } else {
         setProfile(null);
         setHasProfile(false);

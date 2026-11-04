@@ -112,6 +112,9 @@ export default function UserManagementPage() {
         setUsers(data.users || []);
         setTotalPages(data.totalPages || 1);
         setTotalCount(data.total || 0);
+      } else {
+        const err = await res.json().catch(() => ({}));
+        toast({ title: 'Error loading users', description: err.error || 'Failed to fetch users', variant: 'destructive' });
       }
     } catch (err) {
       console.error('Error fetching users:', err);

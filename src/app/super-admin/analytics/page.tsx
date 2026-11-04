@@ -34,8 +34,10 @@ import {
   Legend,
 } from 'recharts';
 import { supabase } from '@/lib/supabase';
+import { useToast } from '@/hooks/use-toast';
 
 export default function PlatformAnalyticsPage() {
+  const { toast } = useToast();
   const [range, setRange] = useState<'today' | '7d' | '30d' | '90d' | 'custom'>('30d');
   const [customStart, setCustomStart] = useState('');
   const [customEnd, setCustomEnd] = useState('');
@@ -63,6 +65,9 @@ export default function PlatformAnalyticsPage() {
         const json = await res.json();
         setTimeSeries(json.timeSeries || []);
         setSummary(json.summary || null);
+      } else {
+        const err = await res.json().catch(() => ({}));
+        toast({ title: 'Error loading analytics', description: err.error || 'Failed to fetch analytics data', variant: 'destructive' });
       }
     } catch (err) {
       console.error('Error fetching analytics:', err);

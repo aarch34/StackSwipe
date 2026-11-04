@@ -56,6 +56,9 @@ export default function MessagingAnalyticsPage() {
       if (res.ok) {
         const json = await res.json();
         setMetrics(json.metrics);
+      } else {
+        const err = await res.json().catch(() => ({}));
+        toast({ title: 'Error loading metrics', description: err.error || 'Failed to fetch messaging data', variant: 'destructive' });
       }
     } catch (err) {
       console.error('Error fetching messaging metrics:', err);
