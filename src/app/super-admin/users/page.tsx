@@ -22,7 +22,7 @@ import {
   Sparkles,
   AlertCircle,
   CheckCircle2,
-} from 'lucide-react';
+} from '@/components/px-icons';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';

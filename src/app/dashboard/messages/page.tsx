@@ -12,7 +12,7 @@ import {
   Clock,
   Download,
   Maximize2,
-} from 'lucide-react';
+} from '@/components/px-icons';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

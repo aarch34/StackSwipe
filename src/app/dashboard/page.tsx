@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { Heart, SlidersHorizontal, Undo, X as XIcon, Users, RotateCcw, Sparkles, PartyPopper } from 'lucide-react';
+import { Heart, SlidersHorizontal, Undo, X as XIcon, Users, RotateCcw, Sparkles, PartyPopper } from '@/components/px-icons';
 import confetti from 'canvas-confetti';
 import { UserProfile } from '@/lib/data';
 import { useAuth } from '@/hooks/use-auth';

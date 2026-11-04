@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Bot, Loader2, RefreshCw, ArrowUp } from 'lucide-react';
+import { Bot, Loader2, RefreshCw, ArrowUp } from '@/components/px-icons';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';

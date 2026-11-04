@@ -13,7 +13,7 @@ import {
   Sparkles,
   MessageSquare,
   CheckCircle2,
-} from 'lucide-react';
+} from '@/components/px-icons';
 import { type UserProfile } from '@/lib/data';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';

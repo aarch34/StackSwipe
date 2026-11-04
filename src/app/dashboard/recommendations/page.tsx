@@ -18,7 +18,7 @@ import {
   Check,
   Lightbulb,
   Loader2,
-} from 'lucide-react';
+} from '@/components/px-icons';
 import { useToast } from '@/hooks/use-toast';
 
 interface Message {

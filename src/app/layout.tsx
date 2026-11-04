@@ -1,9 +1,20 @@
 
+import type { Metadata } from 'next';
+import { Handjet, Silkscreen, Space_Grotesk } from 'next/font/google';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { ThemeProvider } from '@/components/theme-provider';
 import { AuthProvider } from '@/hooks/use-auth';
 import { AppRouter } from '@/components/app-router';
+
+const pixel = Handjet({ subsets: ['latin'], variable: '--font-pixel', display: 'swap' });
+const label = Silkscreen({ subsets: ['latin'], weight: ['400', '700'], variable: '--font-label', display: 'swap' });
+const body = Space_Grotesk({ subsets: ['latin'], variable: '--font-body', display: 'swap' });
+
+export const metadata: Metadata = {
+  title: 'StackSwipe',
+  description: 'Swipe to meet developers, designers, founders and students. When you both swipe right, you can message.',
+};
 
 export default function RootLayout({
   children,
@@ -11,25 +22,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <head>
-        <title>StackSwipe</title>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
-          rel="stylesheet"
-        />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap"
-          rel="stylesheet"
-        />
-      </head>
-      <body className="font-body antialiased">
+    <html lang="en" suppressHydrationWarning className={`${pixel.variable} ${label.variable} ${body.variable}`}>
+      <body className="font-body">
           <ThemeProvider
             attribute="class"
-            defaultTheme="system"
-            enableSystem
+            defaultTheme="light"
+            enableSystem={false}
+            storageKey="stackswipe-theme"
             disableTransitionOnChange
           >
             <AuthProvider>

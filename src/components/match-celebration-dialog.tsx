@@ -13,7 +13,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Sparkles, MessageSquare, Handshake, Code2, ArrowRight, Share2 } from 'lucide-react';
+import { Sparkles, MessageSquare, Handshake, Code2, ArrowRight, Share2 } from '@/components/px-icons';
 import { UserProfile } from '@/lib/data';
 import { AuthUser } from '@/hooks/use-auth';
 

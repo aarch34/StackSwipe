@@ -13,7 +13,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import type { UserProfile } from '@/lib/data';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { User as UserIcon, Upload, Plus, X, Sparkles } from 'lucide-react';
+import { User as UserIcon, Upload, Plus, X, Sparkles } from '@/components/px-icons';
 import { Checkbox } from '@/components/ui/checkbox';
 import { uploadToCloudinary } from '@/lib/cloudinary'; // Add this import
 

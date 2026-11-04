@@ -5,7 +5,7 @@ import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { DashboardSidebar } from '@/components/dashboard-sidebar';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Button } from '@/components/ui/button';
-import { Globe } from 'lucide-react';
+import { Globe } from '@/components/px-icons';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 import { useAuth } from '@/hooks/use-auth';
-import { ShieldAlert, AlertTriangle, LogOut } from 'lucide-react';
+import { ShieldAlert, AlertTriangle, LogOut } from '@/components/px-icons';
 
 export default function DashboardLayout({
   children,

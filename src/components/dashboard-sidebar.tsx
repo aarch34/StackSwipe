@@ -9,7 +9,7 @@ import {
   User,
   LogOut,
  
-} from 'lucide-react';
+} from '@/components/px-icons';
 import { useAuth } from '@/hooks/use-auth';
 import {
   Sidebar,

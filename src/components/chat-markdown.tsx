@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { Copy, Check } from 'lucide-react';
+import { Copy, Check } from '@/components/px-icons';
 import { Button } from '@/components/ui/button';
 
 interface ChatMarkdownProps {

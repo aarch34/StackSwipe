@@ -20,7 +20,7 @@ import {
   Loader2,
   AlertCircle,
   ArrowLeft,
-} from 'lucide-react';
+} from '@/components/px-icons';
 
 interface AuthFormProps {
   initialMode?: 'login' | 'signup';

@@ -20,7 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Flag, ShieldAlert, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Flag, ShieldAlert, CheckCircle2, AlertCircle } from '@/components/px-icons';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 
