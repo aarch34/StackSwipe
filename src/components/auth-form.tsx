@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useAuth } from '@/hooks/use-auth';
+import { useAuth, checkIsAdmin } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -55,6 +55,7 @@ export function AuthForm({ initialMode = 'login' }: AuthFormProps) {
     loginWithGoogle,
     loginWithGithub,
     user,
+    session,
     hasProfile,
     profile,
     onboardingCompleted,
@@ -75,15 +76,27 @@ export function AuthForm({ initialMode = 'login' }: AuthFormProps) {
 
   // If already authenticated, redirect to appropriate destination
   useEffect(() => {
-    if (user) {
+    if (!user || !session) return;
+
+    let cancelled = false;
+    checkIsAdmin(session.access_token).then((isAdmin) => {
+      if (cancelled) return;
+      if (isAdmin) {
+        router.replace('/super-admin');
+        return;
+      }
       const isCompleted = Boolean(
         profile?.onboarding_completed ||
         onboardingCompleted ||
-        (typeof window !== 'undefined' && user && localStorage.getItem(`stackswipe_onboarding_${user.id}`)?.includes('"onboarding_completed":true'))
+        (typeof window !== 'undefined' && localStorage.getItem(`stackswipe_onboarding_${user.id}`)?.includes('"onboarding_completed":true'))
       );
       router.replace(isCompleted ? '/dashboard' : '/onboarding');
-    }
-  }, [user, profile, onboardingCompleted, router]);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user, session, profile, onboardingCompleted, router]);
 
   const handleOAuth = async (provider: 'google' | 'github') => {
     setErrorMessage(null);

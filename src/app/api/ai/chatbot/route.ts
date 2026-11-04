@@ -21,13 +21,8 @@ export async function POST(request: Request) {
   } catch (err: any) {
     console.error('Chatbot route error:', err);
     return NextResponse.json(
-      {
-        error:
-          err?.message ||
-          err?.toString?.() ||
-          'Failed to get chat response (check Groq API key/config)',
-      },
-      { status: 500 }
+      { error: 'StackBot is temporarily unavailable. Please try again in a moment.' },
+      { status: 502 }
     );
   }
 }

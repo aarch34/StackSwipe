@@ -44,6 +44,20 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Set before an OAuth redirect, because OAuth returns to /dashboard rather than the login form.
+const OAUTH_ADMIN_CHECK_KEY = 'stackswipe_oauth_admin_check';
+
+export async function checkIsAdmin(accessToken: string): Promise<boolean> {
+  try {
+    const res = await fetch('/api/admin/auth/me', {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [session, setSession] = useState<Session | null>(null);
@@ -211,21 +225,26 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // Listen to Supabase auth state changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, newSession) => {
+    } = supabase.auth.onAuthStateChange((event, newSession) => {
       if (!isMounted) return;
       setSession(newSession);
       setUser(enrichUser(newSession?.user ?? null));
 
-      if (newSession?.user) {
-        await loadUserProfile(newSession.user);
-      } else {
-        setProfile(null);
-        setHasProfile(false);
-        setOnboardingCompleted(false);
-        setOnboardingStep(0);
-        setMatches([]);
-      }
-      setLoading(false);
+      // Supabase warns that awaiting its calls inside this callback can deadlock
+      // the auth lock, so the profile load runs after the callback has returned.
+      setTimeout(async () => {
+        if (!isMounted) return;
+        if (newSession?.user) {
+          await loadUserProfile(newSession.user);
+        } else {
+          setProfile(null);
+          setHasProfile(false);
+          setOnboardingCompleted(false);
+          setOnboardingStep(0);
+          setMatches([]);
+        }
+        if (isMounted) setLoading(false);
+      }, 0);
     });
 
     return () => {
@@ -233,6 +252,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       subscription.unsubscribe();
     };
   }, []);
+
+  // After an OAuth login, send admins to the admin panel
+  useEffect(() => {
+    if (!session || !sessionStorage.getItem(OAUTH_ADMIN_CHECK_KEY)) return;
+    sessionStorage.removeItem(OAUTH_ADMIN_CHECK_KEY);
+    checkIsAdmin(session.access_token).then((isAdmin) => {
+      if (isAdmin) router.replace('/super-admin');
+    });
+  }, [session, router]);
 
   // Load matches when user and profile are ready
   const loadMatches = useCallback(async () => {
@@ -416,6 +444,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const loginWithGoogle = async () => {
     const redirectTo =
       typeof window !== 'undefined' ? `${window.location.origin}/dashboard` : undefined;
+    sessionStorage.setItem(OAUTH_ADMIN_CHECK_KEY, '1');
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
@@ -432,6 +461,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const loginWithGithub = async () => {
     const redirectTo =
       typeof window !== 'undefined' ? `${window.location.origin}/dashboard` : undefined;
+    sessionStorage.setItem(OAUTH_ADMIN_CHECK_KEY, '1');
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'github',
       options: {

@@ -52,6 +52,7 @@ export default function SwipePage() {
   const [allProfiles, setAllProfiles] = useState<UserProfile[]>([]);
   const [filteredProfiles, setFilteredProfiles] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [swipedIds, setSwipedIds] = useState<Set<string>>(new Set());
   const [swipes, setSwipes] = useState(0);
@@ -77,26 +78,38 @@ export default function SwipePage() {
     
     try {
       setLoading(true);
-      
-      // Safety timeout promise (2.5s max) so slow networks never hang on the skeleton
+      setLoadError(null);
+
+      // Safety timeout so slow networks never hang on the skeleton
       const timeoutPromise = new Promise<{ timeout: true }>((resolve) =>
-        setTimeout(() => resolve({ timeout: true }), 2500)
+        setTimeout(() => resolve({ timeout: true }), 10000)
       );
 
       const queryPromise = Promise.all([
         supabase.from('swipes').select('swiped_id').eq('swiper_id', user.id),
         supabase.from('users').select('*').neq('id', user.id).limit(50),
+        supabase.auth.getSession(),
       ]);
 
       const result = await Promise.race([queryPromise, timeoutPromise]);
 
       if ('timeout' in result) {
-        console.warn('Profile fetch reached 2.5s timeout; displaying empty state gracefully');
-        setLoading(false);
+        console.warn('Profile fetch reached the 10s timeout');
+        setLoadError('The database took too long to respond. Please check your connection and try again.');
         return;
       }
 
-      const [swipesRes, profilesRes] = result;
+      const [swipesRes, profilesRes, sessionRes] = result;
+
+      // Row Level Security returns an empty list, not an error, without a session
+      if (!sessionRes.data.session) {
+        setLoadError('Your session has expired. Please log out and log back in.');
+        return;
+      }
+
+      if (swipesRes.error) {
+        console.error('Error fetching swipes:', swipesRes.error);
+      }
 
       const alreadySwipedIds = new Set(
         swipesRes.data?.map(swipe => swipe.swiped_id) || []
@@ -105,6 +118,7 @@ export default function SwipePage() {
 
       if (profilesRes.error) {
         console.error('Error fetching profiles:', profilesRes.error);
+        setLoadError('The profiles could not be loaded from the database. Please try again.');
         toast({
           title: 'Notice',
           description: 'Could not load profiles right now.',
@@ -141,6 +155,7 @@ export default function SwipePage() {
 
     } catch (error) {
       console.error("Failed to fetch profiles:", error);
+      setLoadError('The profiles could not be loaded. Please try again.');
       toast({
         title: 'Notice',
         description: 'Could not load profiles. Please try again later.',
@@ -503,12 +518,22 @@ export default function SwipePage() {
         </div>
         <CardHeader className="p-0 space-y-1 mb-4">
           <CardTitle className="font-headline text-xl sm:text-2xl font-bold tracking-tight">
-            {noMoreProfiles ? "No Other Profiles Yet" : "You're Out of Swipes!"}
+            {!noMoreProfiles
+              ? "You're Out of Swipes!"
+              : loadError
+                ? "Couldn't Load Profiles"
+                : allProfiles.length > 0 || swipedIds.size > 0
+                  ? "You've Seen Everyone"
+                  : "No Other Profiles Yet"}
           </CardTitle>
           <CardDescription className="text-xs sm:text-sm max-w-xs mx-auto">
-            {noMoreProfiles
-              ? "You're currently the only developer registered in the database! As more tech professionals sign up, their profiles will appear here."
-              : `You've reached your daily limit of ${SWIPE_LIMIT} swipes. Check back tomorrow!`}
+            {!noMoreProfiles
+              ? `You've reached your daily limit of ${SWIPE_LIMIT} swipes. Check back tomorrow!`
+              : loadError
+                ? loadError
+                : allProfiles.length > 0 || swipedIds.size > 0
+                  ? "There are no more profiles to show right now. Clear any filters or check back later."
+                  : "You're currently the only developer registered in the database! As more tech professionals sign up, their profiles will appear here."}
           </CardDescription>
         </CardHeader>
         <CardContent className="p-0 flex flex-col gap-2 w-full max-w-xs">
