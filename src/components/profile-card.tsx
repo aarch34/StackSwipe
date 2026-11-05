@@ -221,23 +221,23 @@ export function ProfileCard({ profile, variant = 'swipe', labels = [], onBlocked
               className="object-cover object-top"
             />
           ) : (
-            <div className="absolute inset-0 flex items-start justify-center bg-secondary pt-6">
-              <span className="select-none font-headline text-7xl font-bold">
+            <div className="absolute inset-0 flex items-center justify-center bg-secondary">
+              <span className="select-none font-headline text-8xl font-bold">
                 {profile.name?.charAt(0) ?? '?'}
               </span>
             </div>
           )}
+        </div>
 
-          <div className={`absolute inset-x-0 bottom-0 p-4 ${NAME_PLATE}`}>
-            <h2 className="font-headline text-4xl font-bold leading-none">{profile.name}</h2>
-            {subtitle(profile) && <p className="mt-1 line-clamp-1 text-sm">{subtitle(profile)}</p>}
-            {placeLine(profile) && (
-              <p className="mt-1 inline-flex items-center gap-1 text-xs">
-                <MapPin className="h-4 w-4" />
-                {placeLine(profile)}
-              </p>
-            )}
-          </div>
+        <div className={`flex-shrink-0 px-4 py-3 ${NAME_PLATE}`}>
+          <h2 className="font-headline text-4xl font-bold leading-none">{profile.name}</h2>
+          {subtitle(profile) && <p className="mt-1 line-clamp-1 text-sm">{subtitle(profile)}</p>}
+          {placeLine(profile) && (
+            <p className="mt-1 inline-flex items-center gap-1 text-xs">
+              <MapPin className="h-4 w-4" />
+              {placeLine(profile)}
+            </p>
+          )}
         </div>
 
         <ScrollArea className="flex-1 overflow-y-auto">
@@ -261,8 +261,9 @@ export function ProfileCard({ profile, variant = 'swipe', labels = [], onBlocked
   }
 
   return (
-    <div className="flex w-full flex-col bg-card text-card-foreground">
-      <div className="relative h-52 w-full flex-shrink-0 bg-muted">
+    <div className="flex min-h-full w-full flex-col bg-card text-card-foreground">
+      {/* Grows to fill the card when a profile has little to show */}
+      <div className="relative min-h-60 w-full flex-1 bg-muted">
         {photo ? (
           <PixelImage
             src={photo}
@@ -272,17 +273,17 @@ export function ProfileCard({ profile, variant = 'swipe', labels = [], onBlocked
             className="object-cover object-top"
           />
         ) : (
-          <div className="absolute inset-0 flex items-start justify-center bg-secondary pt-6">
-            <span className="select-none font-headline text-7xl font-bold">
+          <div className="absolute inset-0 flex items-center justify-center bg-secondary">
+            <span className="select-none font-headline text-8xl font-bold">
               {profile.name?.charAt(0) ?? '?'}
             </span>
           </div>
         )}
-        <div className={`absolute inset-x-0 bottom-0 px-4 py-3 ${NAME_PLATE}`}>
-          <h2 className="font-headline text-4xl font-bold leading-none">{profile.name}</h2>
-          {subtitle(profile) && <p className="mt-1 line-clamp-1 text-sm">{subtitle(profile)}</p>}
-          {placeLine(profile) && <p className="line-clamp-1 text-xs opacity-90">{placeLine(profile)}</p>}
-        </div>
+      </div>
+      <div className={`px-4 py-3 ${NAME_PLATE}`}>
+        <h2 className="font-headline text-4xl font-bold leading-none">{profile.name}</h2>
+        {subtitle(profile) && <p className="mt-1 line-clamp-1 text-sm">{subtitle(profile)}</p>}
+        {placeLine(profile) && <p className="line-clamp-1 text-xs opacity-90">{placeLine(profile)}</p>}
       </div>
 
       <div className="space-y-3 p-4">
