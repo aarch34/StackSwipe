@@ -293,7 +293,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       if (otherUserIds.length > 0) {
         const { data: otherUsersData } = await supabase
-          .from('users')
+          .from('user_profiles')
           .select('*')
           .in('id', otherUserIds);
 
@@ -340,7 +340,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
               college: otherUserData.college || '',
               currentWork: otherUserData.current_work || '',
               links: otherUserData.links || {},
-              email: otherUserData.email || '',
               gender: otherUserData.gender || '',
               onboarding_completed: Boolean(otherUserData.onboarding_completed),
               onboarding_step: otherUserData.onboarding_step || 0,
@@ -361,7 +360,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
               networkingTags: [],
               college: '',
               currentWork: '',
-              links: {},
+              links: { github: '', linkedin: '' },
               email: '',
               gender: '',
               onboarding_completed: true,

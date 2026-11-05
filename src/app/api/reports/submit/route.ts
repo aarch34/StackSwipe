@@ -1,14 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getBaseClient, createAdminScopedClient } from '@/lib/admin-auth';
+import { getUserSession } from '@/lib/user-auth';
 
 export async function POST(request: NextRequest) {
   try {
-    const { reporterId, reportedId, category, description, relevantMessageIds } =
-      await request.json();
+    const session = await getUserSession(request);
+    if (!session) {
+      return NextResponse.json({ error: 'Please sign in to submit a report.' }, { status: 401 });
+    }
 
-    if (!reporterId || !reportedId || !category) {
+    const { reportedId, category, description, relevantMessageIds } = await request.json();
+    const reporterId = session.user.id;
+
+    if (!reportedId || !category) {
       return NextResponse.json(
-        { error: 'Missing required report fields (reporterId, reportedId, category)' },
+        { error: 'Missing required report fields (reportedId, category)' },
         { status: 400 }
       );
     }
@@ -20,15 +25,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Try token from authorization header if present
-    const authHeader = request.headers.get('authorization');
-    const token = authHeader?.toLowerCase().startsWith('bearer ')
-      ? authHeader.substring(7).trim()
-      : '';
-
-    const sb = token ? createAdminScopedClient(token) : getBaseClient();
-
-    const { data: newReport, error: insertErr } = await sb
+    // The on_report_notify_admin database trigger alerts the admins.
+    const { data: newReport, error: insertErr } = await session.client
       .from('user_reports')
       .insert({
         reporter_id: reporterId,
@@ -44,35 +42,6 @@ export async function POST(request: NextRequest) {
     if (insertErr) {
       console.error('Error inserting report:', insertErr);
       return NextResponse.json({ error: insertErr.message }, { status: 500 });
-    }
-
-    // Also ensure admin notification is registered
-    try {
-      const { count } = await sb
-        .from('user_reports')
-        .select('*', { count: 'exact', head: true })
-        .eq('reported_id', reportedId);
-
-      const totalReports = count || 1;
-      const isHighPriority = totalReports >= 3;
-
-      await sb.from('admin_notifications').insert({
-        type: isHighPriority ? 'multiple_reports' : 'new_report',
-        title: isHighPriority
-          ? `High Priority: User received ${totalReports} reports`
-          : `New User Report: ${category.replace('_', ' ')}`,
-        message: `Report filed against user ${reportedId} for reason: ${category}. Total reports: ${totalReports}.`,
-        priority: isHighPriority ? 'critical' : 'medium',
-        is_read: false,
-        metadata: {
-          report_id: newReport.id,
-          reported_id: reportedId,
-          reporter_id: reporterId,
-          category,
-        },
-      });
-    } catch (notifErr) {
-      console.warn('Could not insert admin notification:', notifErr);
     }
 
     return NextResponse.json({

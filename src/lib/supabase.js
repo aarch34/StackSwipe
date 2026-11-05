@@ -119,3 +119,12 @@ export const supabaseService = {
     return { data, error }
   }
 }
+
+/**
+ * Headers that identify the signed-in user to this app's own API routes.
+ * @returns {Promise<Record<string, string>>}
+ */
+export async function getAuthHeaders() {
+  const { data: { session } } = await supabase.auth.getSession()
+  return session ? { Authorization: `Bearer ${session.access_token}` } : {}
+}

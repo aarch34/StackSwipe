@@ -1,9 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateReplyAssistance } from '@/lib/ai-service';
+import { consumeAiQuota, readAiRequestBody, requireActiveUser } from '@/lib/user-auth';
+
+const DAILY_LIMIT = 50;
 
 export async function POST(request: NextRequest) {
   try {
-    const { currentUser, otherUser, messageHistory } = await request.json();
+    const session = await requireActiveUser(request);
+    if (session instanceof NextResponse) return session;
+
+    const body = await readAiRequestBody(request);
+    if (!body) {
+      return NextResponse.json({ error: 'Request is too large' }, { status: 413 });
+    }
+
+    const { currentUser, otherUser, messageHistory } = body;
 
     if (!currentUser || !otherUser || !messageHistory) {
       return NextResponse.json(
@@ -12,8 +23,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const blocked = await consumeAiQuota(session, 'reply', DAILY_LIMIT);
+    if (blocked) return blocked;
+
     // Convert message history to simple text array for AI processing
-    const textHistory = messageHistory.map((msg: any) => 
+    const textHistory = messageHistory.map((msg: any) =>
       `${msg.isFromCurrentUser ? currentUser.name : otherUser.name}: ${msg.text}`
     );
 

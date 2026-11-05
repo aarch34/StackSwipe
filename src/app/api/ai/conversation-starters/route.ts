@@ -1,17 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateConversationStarters } from '@/lib/ai-service';
-import { getBaseClient } from '@/lib/admin-auth';
+import { consumeAiQuota, readAiRequestBody, requireActiveUser } from '@/lib/user-auth';
+
+const DEFAULT_DAILY_LIMIT = 15;
 
 export async function POST(request: NextRequest) {
-  const sb = getBaseClient();
-  let currentUserProfile: any = null;
+  const session = await requireActiveUser(request);
+  if (session instanceof NextResponse) return session;
+
+  const sb = session.client;
   let otherUserProfile: any = null;
   let categoryType = 'first_message';
 
   try {
-    const body = await request.json();
+    const body = await readAiRequestBody(request);
+    if (!body) {
+      return NextResponse.json({ error: 'Request is too large' }, { status: 413 });
+    }
+
     const { currentUser, otherUser, conversationType } = body;
-    currentUserProfile = currentUser;
     otherUserProfile = otherUser;
     categoryType = conversationType || 'first_message';
 
@@ -22,11 +29,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 1. Check Platform Settings (Admin Killswitch)
+    // 1. Check Platform Settings (Admin Killswitch and daily limit)
+    let dailyLimit = DEFAULT_DAILY_LIMIT;
     try {
       const { data: settings } = await sb
         .from('platform_settings')
-        .select('ai_icebreakers_enabled')
+        .select('ai_icebreakers_enabled, max_daily_icebreakers')
         .eq('id', 'default')
         .maybeSingle();
 
@@ -40,9 +48,16 @@ export async function POST(request: NextRequest) {
           { status: 403 }
         );
       }
+
+      if (typeof settings?.max_daily_icebreakers === 'number') {
+        dailyLimit = settings.max_daily_icebreakers;
+      }
     } catch {
       // Continue if platform_settings table not yet created
     }
+
+    const blocked = await consumeAiQuota(session, 'icebreaker', dailyLimit);
+    if (blocked) return blocked;
 
     const suggestions = await generateConversationStarters({
       currentUser,
@@ -53,7 +68,7 @@ export async function POST(request: NextRequest) {
     // 2. Log successful generation to ai_usage_logs
     try {
       await sb.from('ai_usage_logs').insert({
-        user_id: currentUser.id || null,
+        user_id: session.user.id,
         other_user_id: otherUser.id || null,
         category: categoryType,
         success: true,
@@ -70,7 +85,7 @@ export async function POST(request: NextRequest) {
     // Log failure
     try {
       await sb.from('ai_usage_logs').insert({
-        user_id: currentUserProfile?.id || null,
+        user_id: session.user.id,
         other_user_id: otherUserProfile?.id || null,
         category: categoryType,
         success: false,
@@ -86,4 +101,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

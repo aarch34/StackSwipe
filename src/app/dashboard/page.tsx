@@ -91,7 +91,7 @@ export default function SwipePage() {
 
       const queryPromise = Promise.all([
         supabase.from('swipes').select('swiped_id').eq('swiper_id', user.id),
-        supabase.from('users').select('*').neq('id', user.id).limit(50),
+        supabase.from('user_profiles').select('*').neq('id', user.id).limit(50),
         supabase.auth.getSession(),
       ]);
 
@@ -150,8 +150,7 @@ export default function SwipePage() {
           networkingTags: p.networking_tags || [],
           college: p.college,
           currentWork: p.current_work,
-          links: p.links || {},
-          email: p.email
+          links: p.links || {}
         }));
 
       setAllProfiles(transformedProfiles);

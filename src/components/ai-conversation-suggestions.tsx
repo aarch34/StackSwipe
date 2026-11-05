@@ -5,6 +5,7 @@ import { Sparkles, Loader2, RefreshCw, X, Zap } from '@/components/px-icons';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
+import { getAuthHeaders } from '@/lib/supabase';
 import type { UserProfile } from '@/lib/data';
 
 interface AiSuggestionsProps {
@@ -34,7 +35,7 @@ export function AiConversationSuggestions({
     try {
       const response = await fetch('/api/ai/conversation-starters', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...(await getAuthHeaders()) },
         body: JSON.stringify({
           currentUser,
           otherUser,

@@ -23,6 +23,7 @@ import {
 import { Flag, ShieldAlert, CheckCircle2, AlertCircle } from '@/components/px-icons';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
+import { getAuthHeaders } from '@/lib/supabase';
 
 interface ReportUserDialogProps {
   reportedUser: {
@@ -70,9 +71,8 @@ export function ReportUserDialog({
     try {
       const res = await fetch('/api/reports/submit', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...(await getAuthHeaders()) },
         body: JSON.stringify({
-          reporterId: user.id,
           reportedId: reportedUser.id,
           category,
           description: description.trim(),

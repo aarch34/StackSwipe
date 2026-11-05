@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { getAuthHeaders } from '@/lib/supabase';
 import type { UserProfile, Message } from '@/lib/data';
 
 interface AiReplySuggestionsProps {
@@ -38,7 +39,7 @@ export function AiReplySuggestions({
 
       const response = await fetch('/api/ai/reply-suggestions', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...(await getAuthHeaders()) },
         body: JSON.stringify({
           currentUser,
           otherUser,

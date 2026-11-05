@@ -20,6 +20,7 @@ import {
   Loader2,
 } from '@/components/px-icons';
 import { useToast } from '@/hooks/use-toast';
+import { getAuthHeaders } from '@/lib/supabase';
 
 interface Message {
   id: string;
@@ -142,7 +143,7 @@ export default function StackBotPage() {
     try {
       const res = await fetch('/api/ai/chatbot', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...(await getAuthHeaders()) },
         body: JSON.stringify({ message: trimmed }),
       });
 
