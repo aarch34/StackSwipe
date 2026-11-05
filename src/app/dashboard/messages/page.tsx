@@ -39,6 +39,12 @@ import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 import { AiConversationSuggestions } from '@/components/ai-conversation-suggestions';
 import { ReportUserDialog } from '@/components/report-user-dialog';
+import { BlockUserAction, UnmatchUserAction } from '@/components/safety-actions';
+import { useUnreadCounts } from '@/hooks/use-unread-counts';
+import { QUICK_START_MESSAGES } from '@/lib/guidance';
+
+const TYPING_SEND_INTERVAL_MS = 2000;
+const TYPING_VISIBLE_MS = 3000;
 
 // Resilient match validator
 function isValidMatch(match: Match, currentUserId: string): boolean {
@@ -167,7 +173,13 @@ function MessagesContent() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const messageInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+  const { counts: unreadCounts, refresh: refreshUnread } = useUnreadCounts();
+
+  const [otherUserTyping, setOtherUserTyping] = useState(false);
+  const typingChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const lastTypingSentRef = useRef(0);
 
   const validMatches = matches.filter((match) =>
     currentUserId ? isValidMatch(match, currentUserId) : false
@@ -300,6 +312,16 @@ function MessagesContent() {
 
       setMessages(transformed);
 
+      // Opening a chat counts as reading it
+      if (transformed.some((msg) => !msg.read && msg.senderId !== currentUserId)) {
+        supabase
+          .rpc('mark_messages_read', { p_match_ids: matchIds })
+          .then(({ error: readError }) => {
+            if (readError) console.warn('Could not mark messages as read:', readError);
+            refreshUnread();
+          });
+      }
+
       // Persist in localStorage for instant access on next load
       if (typeof window !== 'undefined' && otherUser) {
         const cacheKey = `stackswipe_chat_${currentUserId}_${otherUser.id}`;
@@ -396,6 +418,47 @@ function MessagesContent() {
       clearInterval(interval);
     };
   }, [activeConversation?.id, currentMatchIds.join(','), currentUserId, otherUser?.id]);
+
+  // Typing indicator over a realtime broadcast. Nothing is stored.
+  useEffect(() => {
+    if (!primaryMatchId || !currentUserId) return;
+
+    let hideTimer: ReturnType<typeof setTimeout>;
+    const channel = supabase
+      .channel(`typing_${primaryMatchId}`, { config: { broadcast: { self: false } } })
+      .on('broadcast', { event: 'typing' }, ({ payload }) => {
+        if (payload?.userId === currentUserId) return;
+        setOtherUserTyping(true);
+        clearTimeout(hideTimer);
+        hideTimer = setTimeout(() => setOtherUserTyping(false), TYPING_VISIBLE_MS);
+      })
+      .subscribe();
+
+    typingChannelRef.current = channel;
+
+    return () => {
+      clearTimeout(hideTimer);
+      setOtherUserTyping(false);
+      typingChannelRef.current = null;
+      supabase.removeChannel(channel);
+    };
+  }, [primaryMatchId, currentUserId]);
+
+  const announceTyping = () => {
+    const now = Date.now();
+    if (now - lastTypingSentRef.current < TYPING_SEND_INTERVAL_MS) return;
+    lastTypingSentRef.current = now;
+    typingChannelRef.current?.send({
+      type: 'broadcast',
+      event: 'typing',
+      payload: { userId: currentUserId },
+    });
+  };
+
+  const chooseStarterMessage = (text: string) => {
+    setNewMessage(text);
+    messageInputRef.current?.focus();
+  };
 
   // Auto scroll to bottom when messages update
   useEffect(() => {
@@ -541,9 +604,13 @@ function MessagesContent() {
     } catch (error) {
       console.error('Failed to send message:', error);
       setMessages((prev) => prev.filter((msg) => msg.id !== optimisticId));
+      setNewMessage(messageText);
+      const tooFast = (error as { message?: string })?.message?.includes('too quickly');
       toast({
-        title: 'Error sending message',
-        description: 'Could not deliver message. Please check your connection.',
+        title: tooFast ? 'Slow down a little' : 'Your message did not send',
+        description: tooFast
+          ? 'You are sending messages too quickly. Please wait a moment.'
+          : 'Please check your connection and try again.',
         variant: 'destructive',
       });
     } finally {
@@ -580,10 +647,10 @@ function MessagesContent() {
               {displayedMatches.length === 0 && (
                 <div className="p-4 text-center text-xs text-muted-foreground">
                   {matches.length === 0
-                    ? 'No matches yet. Keep swiping!'
+                    ? 'No chats yet. When you and someone both swipe right, your conversation opens here.'
                     : searchQuery
-                    ? 'No matches found for your search.'
-                    : 'No valid matches found.'}
+                    ? 'Nobody by that name yet.'
+                    : 'No chats to show right now.'}
                 </div>
               )}
 
@@ -594,6 +661,9 @@ function MessagesContent() {
                 if (!matchUser) return null;
 
                 const isSelected = otherUser?.id === matchUser.id;
+                const unread = [match.id, ...(match.matchIds || [])]
+                  .filter((id, index, ids) => ids.indexOf(id) === index)
+                  .reduce((total, id) => total + (unreadCounts[id] || 0), 0);
 
                 return (
                   <button
@@ -605,18 +675,21 @@ function MessagesContent() {
                       isSelected && 'bg-accent text-accent-foreground'
                     )}
                   >
-                    <div className="relative">
-                      <Avatar className="h-10 w-10 border-2">
-                        <AvatarImage src={matchUser.photoURL} alt={matchUser.name} />
-                        <AvatarFallback className="bg-accent font-headline text-xl font-bold text-accent-foreground">
-                          {matchUser.name?.charAt(0) ?? '?'}
-                        </AvatarFallback>
-                      </Avatar>
-                      <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-background" />
-                    </div>
+                    <Avatar className="h-10 w-10 border-2">
+                      <AvatarImage src={matchUser.photoURL} alt={matchUser.name} />
+                      <AvatarFallback className="bg-accent font-headline text-xl font-bold text-accent-foreground">
+                        {matchUser.name?.charAt(0) ?? '?'}
+                      </AvatarFallback>
+                    </Avatar>
                     <div className="flex-1 truncate">
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between gap-2">
                         <p className="font-semibold text-foreground truncate">{matchUser.name}</p>
+                        {unread > 0 && !isSelected && (
+                          <span className="shrink-0 border-2 bg-primary px-1.5 text-xs font-semibold text-primary-foreground">
+                            {unread}
+                            <span className="sr-only"> unread</span>
+                          </span>
+                        )}
                       </div>
                       {matchUser.headline ? (
                         <p className="text-xs text-muted-foreground truncate">{matchUser.headline}</p>
@@ -639,19 +712,16 @@ function MessagesContent() {
         {activeConversation && otherUser ? (
           <>
             {/* Conversation Header */}
-            <CardHeader className="flex-shrink-0 flex items-center justify-between gap-3 border-b p-3 bg-background/60 backdrop-blur-md">
+            <CardHeader className="flex-shrink-0 flex flex-row flex-wrap items-center justify-between gap-2 space-y-0 border-b p-3 bg-background">
               <Dialog>
                 <DialogTrigger asChild>
                   <button className="flex items-center gap-3 rounded-xl p-1.5 text-left transition-colors hover:bg-accent/60 group">
-                    <div className="relative">
-                      <Avatar className="h-10 w-10 border-2">
-                        <AvatarImage src={otherUser.photoURL} alt={otherUser.name} />
-                        <AvatarFallback className="bg-accent font-headline text-xl font-bold text-accent-foreground">
-                          {otherUser.name?.charAt(0) ?? '?'}
-                        </AvatarFallback>
-                      </Avatar>
-                      <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-background animate-pulse" />
-                    </div>
+                    <Avatar className="h-10 w-10 border-2">
+                      <AvatarImage src={otherUser.photoURL} alt={otherUser.name} />
+                      <AvatarFallback className="bg-accent font-headline text-xl font-bold text-accent-foreground">
+                        {otherUser.name?.charAt(0) ?? '?'}
+                      </AvatarFallback>
+                    </Avatar>
                     <div>
                       <h2 className="text-sm sm:text-base font-semibold group-hover:underline flex items-center gap-1.5">
                         {otherUser.name}
@@ -673,14 +743,24 @@ function MessagesContent() {
                 </DialogContent>
               </Dialog>
 
-              {/* Safety Report Action */}
-              <ReportUserDialog
-                reportedUser={otherUser}
-                relevantMessageIds={messages
-                  .slice(-5)
-                  .map((m) => m.id)
-                  .filter((id) => !id.startsWith('temp_'))}
-              />
+              {/* Safety actions */}
+              <div className="flex items-center gap-0.5">
+                <ReportUserDialog
+                  reportedUser={otherUser}
+                  relevantMessageIds={messages
+                    .slice(-5)
+                    .map((m) => m.id)
+                    .filter((id) => !id.startsWith('temp_'))}
+                />
+                <UnmatchUserAction
+                  user={{ id: otherUser.id, name: otherUser.name }}
+                  onDone={() => setActiveConversation(null)}
+                />
+                <BlockUserAction
+                  user={{ id: otherUser.id, name: otherUser.name }}
+                  onDone={() => setActiveConversation(null)}
+                />
+              </div>
             </CardHeader>
 
             {/* Messages Scroll Area */}
@@ -695,11 +775,28 @@ function MessagesContent() {
                   )}
 
                   {!loadingMessages && messages.length === 0 && (
-                    <div className="py-12 text-center text-xs text-muted-foreground max-w-sm mx-auto space-y-2">
-                      <p className="text-sm font-semibold text-foreground">
-                        Beginning of conversation with {otherUser.name}
-                      </p>
-                      <p>Send a message or share an image to break the ice and start networking!</p>
+                    <div className="mx-auto max-w-md space-y-4 py-8 text-center">
+                      <div className="space-y-1">
+                        <p className="font-headline text-3xl font-semibold leading-none text-foreground">
+                          Don&apos;t overthink it.
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          Every great conversation starts somewhere. No need for the perfect introduction. Just say hello to {otherUser.name}.
+                        </p>
+                      </div>
+                      <div className="space-y-2">
+                        {QUICK_START_MESSAGES.map((starter) => (
+                          <button
+                            key={starter}
+                            type="button"
+                            onClick={() => chooseStarterMessage(starter)}
+                            className="w-full border-2 bg-background px-3 py-2 text-left text-sm transition-colors hover:bg-accent hover:text-accent-foreground"
+                          >
+                            {starter}
+                          </button>
+                        ))}
+                      </div>
+                      <p className="text-xs text-muted-foreground">Remember, everyone started somewhere.</p>
                     </div>
                   )}
 
@@ -790,10 +887,12 @@ function MessagesContent() {
                                   ) : message.read ? (
                                     <span title="Read">
                                       <CheckCheck className="h-3.5 w-3.5" />
+                                      <span className="sr-only">Read</span>
                                     </span>
                                   ) : (
-                                    <span title="Delivered">
-                                      <CheckCheck className="h-3.5 w-3.5 opacity-70" />
+                                    <span title="Sent">
+                                      <Check className="h-3.5 w-3.5" />
+                                      <span className="sr-only">Sent</span>
                                     </span>
                                   )}
                                 </span>
@@ -809,14 +908,18 @@ function MessagesContent() {
             </CardContent>
 
             {/* AI Suggestions Toolbar */}
-            {activeConversation && otherUser && profile && (
-              <div className="flex-shrink-0 space-y-1.5 border-t-2 px-3 py-1.5 bg-background">
-                <AiConversationSuggestions
-                  currentUser={profile}
-                  otherUser={otherUser}
-                  onSelectSuggestion={(suggestion) => setNewMessage(suggestion)}
-                />
-              </div>
+            <div className="flex-shrink-0 space-y-1.5 border-t-2 px-3 py-1.5 bg-background">
+              <AiConversationSuggestions
+                key={otherUser.id}
+                otherUser={otherUser}
+                onSelectSuggestion={chooseStarterMessage}
+              />
+            </div>
+
+            {otherUserTyping && (
+              <p className="flex-shrink-0 bg-card px-3 pt-1.5 text-xs text-muted-foreground" aria-live="polite">
+                {otherUser.name} is typing…
+              </p>
             )}
 
             {/* Selected Image Attachment Preview Banner */}
@@ -876,14 +979,19 @@ function MessagesContent() {
 
                 {/* Message Input Field */}
                 <Input
+                  ref={messageInputRef}
+                  aria-label={`Message ${otherUser.name}`}
                   placeholder={
                     selectedImage
                       ? 'Add a caption (optional)...'
                       : `Message ${otherUser.name}...`
                   }
-                  className="flex-1 rounded-xl bg-background border-border/80"
+                  className="flex-1 bg-background"
                   value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
+                  onChange={(e) => {
+                    setNewMessage(e.target.value);
+                    if (e.target.value) announceTyping();
+                  }}
                   disabled={isSending}
                 />
 
@@ -901,10 +1009,9 @@ function MessagesContent() {
           </>
         ) : (
           <div className="flex h-full flex-col items-center justify-center px-4 text-center">
-            <CardTitle className="mb-2 text-lg">Messages</CardTitle>
+            <CardTitle className="mb-2 font-headline text-4xl leading-none">No need for the perfect introduction.</CardTitle>
             <CardDescription className="max-w-sm text-sm">
-              Select a match on the left to start chatting. Your conversations,
-              message history, and media will appear here.
+              Just say hello. Pick someone from your chats to get started. Messaging is free for everyone here, and nobody owes anyone a reply.
             </CardDescription>
           </div>
         )}

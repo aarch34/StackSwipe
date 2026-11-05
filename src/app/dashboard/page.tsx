@@ -1,16 +1,17 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { CoinRow, PixelHeart, PixelStar, Stacky } from '@/components/pixel/sprites';
 import { PixelDissolve } from '@/components/pixel/pixel-dissolve';
 import { useSwipeDrag } from '@/hooks/use-swipe-drag';
 import Link from 'next/link';
-import { Heart, SlidersHorizontal, Undo, X as XIcon, RotateCcw, Sparkles, PartyPopper } from '@/components/px-icons';
+import { Heart, Undo, X as XIcon, RotateCcw, Sparkles } from '@/components/px-icons';
 import confetti from 'canvas-confetti';
-import { UserProfile } from '@/lib/data';
+import { UserProfile, profileFromRow } from '@/lib/data';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
 import { ProfileCard } from '@/components/profile-card';
+import { DiscoveryFiltersSheet } from '@/components/discovery-filters';
 import { useToast } from '@/hooks/use-toast';
 import { MatchCelebrationDialog } from '@/components/match-celebration-dialog';
 import {
@@ -20,40 +21,26 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-  SheetDescription,
-  SheetFooter,
-  SheetClose,
-} from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { supabase } from '@/lib/supabase';
+import {
+  EMPTY_FILTERS,
+  applyDiscoveryFilters,
+  countActiveFilters,
+  getDiscoveryLabels,
+  relevanceScore,
+  type DiscoveryFilters,
+} from '@/lib/discovery';
 
 const SWIPE_LIMIT = 10;
-const networkingGoalOptions = [
-    'Hackathon Teammate',
-    'Looking for a Mentor / Mentee',
-    'Looking for a Collaborator / Partner',
-    'Looking to Hire / Get Hired',
-    'Looking for Friends / Peers in my Field',
-    'Looking to Learn or Teach Something',
-    'Project / Startup Networking',
-];
+const DECK_SIZE = 200;
 
 export default function SwipePage() {
   const { user, profile: userProfile, loading: authLoading, refreshMatches } = useAuth();
   const [allProfiles, setAllProfiles] = useState<UserProfile[]>([]);
   const [filteredProfiles, setFilteredProfiles] = useState<UserProfile[]>([]);
+  const [filters, setFilters] = useState<DiscoveryFilters>(EMPTY_FILTERS);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -64,13 +51,10 @@ export default function SwipePage() {
   const [matchedProfile, setMatchedProfile] = useState<UserProfile | null>(null);
   const [showMatchDialog, setShowMatchDialog] = useState(false);
   const { toast } = useToast();
-  
-  const [locationFilter, setLocationFilter] = useState('');
-  const [techStackFilter, setTechStackFilter] = useState('');
-  const [experienceLevelFilter, setExperienceLevelFilter] = useState('');
-  const [companyFilter, setCompanyFilter] = useState('');
-  const [collegeFilter, setCollegeFilter] = useState('');
-  const [networkingGoalsFilter, setNetworkingGoalsFilter] = useState<string[]>([]);
+
+  // Read through a ref so a profile refresh does not reshuffle the deck mid-swipe.
+  const myProfile = useRef(userProfile);
+  myProfile.current = userProfile;
 
   const fetchProfiles = useCallback(async () => {
     if (!user) {
@@ -79,7 +63,7 @@ export default function SwipePage() {
       }
       return;
     }
-    
+
     try {
       setLoading(true);
       setLoadError(null);
@@ -91,7 +75,7 @@ export default function SwipePage() {
 
       const queryPromise = Promise.all([
         supabase.from('swipes').select('swiped_id').eq('swiper_id', user.id),
-        supabase.from('user_profiles').select('*').neq('id', user.id).limit(50),
+        supabase.from('discoverable_profiles').select('*').limit(DECK_SIZE),
         supabase.auth.getSession(),
       ]);
 
@@ -115,10 +99,7 @@ export default function SwipePage() {
         console.error('Error fetching swipes:', swipesRes.error);
       }
 
-      const alreadySwipedIds = new Set(
-        swipesRes.data?.map(swipe => swipe.swiped_id) || []
-      );
-      setSwipedIds(alreadySwipedIds);
+      setSwipedIds(new Set(swipesRes.data?.map((swipe) => swipe.swiped_id) || []));
 
       if (profilesRes.error) {
         console.error('Error fetching profiles:', profilesRes.error);
@@ -131,33 +112,17 @@ export default function SwipePage() {
         return;
       }
 
-      // Transform Supabase data to match UserProfile interface
-      const transformedProfiles: UserProfile[] = (profilesRes.data || [])
-        .filter(p => !alreadySwipedIds.has(p.id))
-        .map(p => ({
-          id: p.id,
-          name: p.name,
-          age: p.age,
-          bio: p.bio,
-          headline: p.headline,
-          jobTitle: p.job_title,
-          company: p.company,
-          experienceLevel: p.experience_level,
-          location: p.location,
-          photoURL: p.photo_url,
-          techStack: p.tech_stack || [],
-          interests: p.interests || [],
-          networkingTags: p.networking_tags || [],
-          college: p.college,
-          currentWork: p.current_work,
-          links: p.links || {}
-        }));
+      // Most relevant first. sort() is stable, so ties keep the most recently active order.
+      const ranked = (profilesRes.data || [])
+        .map(profileFromRow)
+        .sort((a, b) => relevanceScore(myProfile.current, b) - relevanceScore(myProfile.current, a));
 
-      setAllProfiles(transformedProfiles);
-      setFilteredProfiles(transformedProfiles);
-
+      setAllProfiles(ranked);
+      setFilteredProfiles(ranked);
+      setFilters(EMPTY_FILTERS);
+      setCurrentIndex(0);
     } catch (error) {
-      console.error("Failed to fetch profiles:", error);
+      console.error('Failed to fetch profiles:', error);
       setLoadError('The profiles could not be loaded. Please try again.');
       toast({
         title: 'Notice',
@@ -172,61 +137,33 @@ export default function SwipePage() {
   useEffect(() => {
     fetchProfiles();
   }, [fetchProfiles]);
-  
-  const handleNetworkingTagChange = (tag: string, checked: boolean) => {
-    setNetworkingGoalsFilter(prev => {
-        const currentTags = prev || [];
-        const newTags = checked
-            ? [...currentTags, tag]
-            : currentTags.filter(t => t !== tag);
-        return newTags;
-    });
-  };
 
-  const handleApplyFilters = () => {
-    let profiles = [...allProfiles];
-
-    if (locationFilter.trim()) {
-        profiles = profiles.filter(p => p.location?.toLowerCase().includes(locationFilter.toLowerCase()));
-    }
-    
-    if (experienceLevelFilter.trim() && experienceLevelFilter !== 'any') {
-        profiles = profiles.filter(p => p.experienceLevel?.toLowerCase().includes(experienceLevelFilter.toLowerCase()));
-    }
-
-    if (companyFilter.trim()) {
-        profiles = profiles.filter(p => p.company?.toLowerCase().includes(companyFilter.toLowerCase()));
-    }
-    
-    if (collegeFilter.trim()) {
-        profiles = profiles.filter(p => p.college?.toLowerCase().includes(collegeFilter.toLowerCase()));
-    }
-
-    if (techStackFilter.trim()) {
-        const skills = techStackFilter.toLowerCase().split(',').map(s => s.trim());
-        profiles = profiles.filter(p => 
-            p.techStack.some(skill => skills.includes(skill.toLowerCase()))
-        );
-    }
-
-    if (networkingGoalsFilter.length > 0) {
-        profiles = profiles.filter(p => 
-            p.networkingTags.some(tag => 
-                networkingGoalsFilter.some(filterGoal => 
-                    tag.toLowerCase().includes(filterGoal.toLowerCase()) || 
-                    filterGoal.toLowerCase().includes(tag.toLowerCase())
-                )
-            )
-        );
-    }
-    
+  const handleApplyFilters = (next: DiscoveryFilters) => {
+    const profiles = applyDiscoveryFilters(
+      allProfiles.filter((profile) => !swipedIds.has(profile.id)),
+      next,
+      userProfile
+    );
+    setFilters(next);
     setFilteredProfiles(profiles);
     setCurrentIndex(0);
-    toast({
-        title: 'Filters Applied',
-        description: `Showing ${profiles.length} matching profiles.`,
-    });
+    if (countActiveFilters(next) > 0) {
+      toast({
+        title: 'Filters applied',
+        description: `${profiles.length} ${profiles.length === 1 ? 'person matches' : 'people match'} your filters.`,
+      });
+    }
   };
+
+  const removeFromDeck = (id: string) => {
+    setAllProfiles((profiles) => profiles.filter((profile) => profile.id !== id));
+    setFilteredProfiles((profiles) => profiles.filter((profile) => profile.id !== id));
+  };
+
+  const goalOptions = useMemo(
+    () => Array.from(new Set(allProfiles.flatMap((profile) => profile.networkingTags || []))).filter(Boolean),
+    [allProfiles]
+  );
 
   const handleSwipe = async (action: 'like' | 'dislike') => {
     if (!user || !filteredProfiles[currentIndex]) return;
@@ -238,7 +175,7 @@ export default function SwipePage() {
       });
       return;
     }
-    
+
     const swipedProfile = filteredProfiles[currentIndex];
 
     // Confetti sprinkles and sparkles burst on swipe right (Connect)
@@ -260,8 +197,8 @@ export default function SwipePage() {
     // Instant Optimistic UI: Trigger animation & advance card with smooth timing
     setRewinding(false);
     setSwipeAnimation(action === 'like' ? 'right' : 'left');
-    setSwipedIds(prev => new Set(prev).add(swipedProfile.id));
-    setSwipes(prev => prev + 1);
+    setSwipedIds((prev) => new Set(prev).add(swipedProfile.id));
+    setSwipes((prev) => prev + 1);
 
     setTimeout(() => {
       setCurrentIndex((prevIndex) => prevIndex + 1);
@@ -340,39 +277,19 @@ export default function SwipePage() {
     })();
   };
 
-  const handlePreviewMatch = () => {
-    const demoProfile: UserProfile = currentProfile || {
-      id: 'demo-alex',
-      name: 'Alex Rivera',
-      headline: 'Full-Stack Engineer & AI Collaborator',
-      bio: 'Building real-time web applications and AI agents with Next.js, Supabase, and TypeScript.',
-      jobTitle: 'Senior Software Engineer',
-      company: 'TechFlow',
-      experienceLevel: 'Senior',
-      location: 'San Francisco, CA',
-      photoURL: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80',
-      techStack: ['Next.js', 'TypeScript', 'Supabase', 'Python', 'TailwindCSS'],
-      interests: ['AI Systems', 'Open Source', 'Hackathons'],
-      networkingTags: ['Collaborator / Partner', 'Hackathon Teammate'],
-      college: 'UC Berkeley',
-      email: 'alex.rivera@example.com',
-    };
-    setMatchedProfile(demoProfile);
-    setShowMatchDialog(true);
-  };
-  
   const handleUndo = () => {
     if (currentIndex > 0) {
       setRewinding(true);
       setCurrentIndex(currentIndex - 1);
-      if(swipes > 0) setSwipes(swipes - 1);
-      toast({ title: 'Undid last swipe.'});
+      if (swipes > 0) setSwipes(swipes - 1);
+      toast({ title: 'Undid last swipe.' });
     }
   };
 
   const currentProfile = filteredProfiles[currentIndex];
   const limitReached = swipes >= SWIPE_LIMIT;
   const noMoreProfiles = !currentProfile && !loading;
+  const filtersActive = countActiveFilters(filters) > 0;
 
   const swipeLocked = limitReached || !!swipeAnimation || !currentProfile;
   const { ref: dragRef, handlers: dragHandlers } = useSwipeDrag({
@@ -402,287 +319,161 @@ export default function SwipePage() {
     return () => window.removeEventListener('keydown', onKeyDown);
   });
 
-  const animationClass = 
-      swipeAnimation === 'left' ? 'animate-swipe-out-left' : 
-      swipeAnimation === 'right' ? 'animate-swipe-out-right' : 
-      '';
+  const animationClass =
+    swipeAnimation === 'left' ? 'animate-swipe-out-left' :
+    swipeAnimation === 'right' ? 'animate-swipe-out-right' :
+    '';
+
+  const emptyTitle = !noMoreProfiles
+    ? "You're out of swipes for today"
+    : loadError
+      ? "Couldn't load profiles"
+      : filtersActive
+        ? 'Nobody matches those filters yet'
+        : 'Your next great conversation could be one swipe away';
+
+  const emptyDescription = !noMoreProfiles
+    ? `You've used your ${SWIPE_LIMIT} swipes. Check back tomorrow, and keep your chats going in the meantime.`
+    : loadError
+      ? loadError
+      : filtersActive
+        ? 'Try removing a filter or two to see more people.'
+        : "You've seen everyone for now. New people join all the time, so check back soon.";
 
   return (
     <main className="container mx-auto p-4 md:p-8">
-      <h1 className="sr-only">Swipe through profiles</h1>
-      <div className="flex flex-col items-center justify-start space-y-6">
-        <div className="w-full max-w-sm flex justify-end">
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button variant="outline">
-                <SlidersHorizontal className="mr-2 h-4 w-4" /> Filters
-              </Button>
-            </SheetTrigger>
-            <SheetContent className="w-full sm:max-w-md p-0 flex flex-col">
-              <SheetHeader className="p-6">
-                <SheetTitle className="font-headline flex items-center gap-2">
-                  <SlidersHorizontal /> Filters
-                </SheetTitle>
-                <SheetDescription>
-                  Refine your search to find the perfect match. Click apply when
-                  you're done.
-                </SheetDescription>
-              </SheetHeader>
-              <ScrollArea className="flex-1">
-                <div className="space-y-4 p-6">
-                  <div>
-                    <Label htmlFor="location">Location</Label>
-                    <Input
-                      id="location"
-                      placeholder="e.g., San Francisco, CA"
-                      value={locationFilter}
-                      onChange={(e) => setLocationFilter(e.target.value)}
-                    />
+      <div className="flex flex-col items-center justify-start space-y-5">
+        <div className="flex w-full max-w-sm items-end justify-between gap-3">
+          <div className="min-w-0">
+            <h1 className="font-headline text-3xl font-bold leading-none">Find people who get where you&apos;re going.</h1>
+            <p className="mt-1 text-xs text-muted-foreground">Someone here might have the answer you&apos;re looking for.</p>
+          </div>
+          <div className="shrink-0">
+            <DiscoveryFiltersSheet filters={filters} goalOptions={goalOptions} onApply={handleApplyFilters} />
+          </div>
+        </div>
+
+        <div className="flex w-full max-w-sm flex-col items-center space-y-6">
+          <div className="relative w-full">
+            {loading ? (
+              <Card className="flex h-[min(520px,70vh)] flex-col items-center justify-center text-center">
+                <CardHeader>
+                  <CardTitle className="font-headline text-2xl">Finding your people…</CardTitle>
+                </CardHeader>
+                <CardContent className="w-full px-4 sm:px-8">
+                  <Skeleton className="h-[min(380px,55vh)] w-full" />
+                </CardContent>
+              </Card>
+            ) : limitReached || noMoreProfiles ? (
+              <Card className="flex h-[min(520px,70vh)] flex-col items-center justify-center p-6 text-center">
+                <Stacky className="mb-3 w-20" />
+                <CardHeader className="mb-4 space-y-1 p-0">
+                  <CardTitle className="font-headline text-4xl font-bold leading-none">{emptyTitle}</CardTitle>
+                  <CardDescription className="mx-auto max-w-xs text-xs sm:text-sm">{emptyDescription}</CardDescription>
+                </CardHeader>
+                <CardContent className="flex w-full max-w-xs flex-col gap-2 p-0">
+                  {filtersActive && noMoreProfiles && !loadError && (
+                    <Button variant="default" size="sm" className="w-full" onClick={() => handleApplyFilters(EMPTY_FILTERS)}>
+                      Clear filters
+                    </Button>
+                  )}
+                  <Button variant="secondary" size="sm" asChild className="w-full">
+                    <Link href="/dashboard/recommendations">
+                      <Sparkles className="mr-1.5 h-4 w-4" />
+                      Ask StackBot a question
+                    </Link>
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={() => fetchProfiles()} className="w-full">
+                    <RotateCcw className="mr-1.5 h-3.5 w-3.5" />
+                    Check for new people
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="relative h-[min(520px,70vh)] w-full">
+                {/* The next card waits underneath */}
+                {filteredProfiles[currentIndex + 1] && (
+                  <div aria-hidden="true" className="px-box absolute inset-0 translate-x-2 translate-y-2 rotate-1 bg-secondary" />
+                )}
+
+                <div
+                  key={currentProfile.id}
+                  ref={dragRef}
+                  {...dragHandlers}
+                  className={cn(
+                    'px-swipe-card px-raised absolute inset-0 cursor-grab overflow-hidden bg-card active:cursor-grabbing',
+                    swipeAnimation ? animationClass : rewinding ? 'animate-rewind' : 'animate-card-in'
+                  )}
+                >
+                  <PixelDissolve active={!!swipeAnimation} />
+
+                  {/* Stamps fade in with the drag */}
+                  <div aria-hidden="true" className="px-stamp-like pointer-events-none absolute left-1/2 top-16 z-40 -translate-x-1/2 -rotate-[8deg] border-4 border-[color:var(--c-ink)] bg-[color:var(--c-leaf)] px-4 py-1 font-label text-2xl text-[color:var(--c-ink)]">
+                    CONNECT
                   </div>
-                  <div>
-                    <Label htmlFor="experienceLevel">Experience Level</Label>
-                    <Select
-                      value={experienceLevelFilter}
-                      onValueChange={setExperienceLevelFilter}
-                    >
-                      <SelectTrigger id="experienceLevel">
-                        <SelectValue placeholder="Any experience level" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="any">Any experience level</SelectItem>
-                        <SelectItem value="Intern">Intern</SelectItem>
-                        <SelectItem value="Junior">Junior</SelectItem>
-                        <SelectItem value="Mid-level">Mid-level</SelectItem>
-                        <SelectItem value="Senior">Senior</SelectItem>
-                        <SelectItem value="Lead">Lead / Staff</SelectItem>
-                        <SelectItem value="Manager">Engineering Manager</SelectItem>
-                        <SelectItem value="Founder">Founder / Co-Founder</SelectItem>
-                        <SelectItem value="Freelancer">Freelancer / Consultant</SelectItem>
-                        <SelectItem value="Student">Student / Self-Taught</SelectItem>
-                      </SelectContent>
-                    </Select>
+                  <div aria-hidden="true" className="px-stamp-nope pointer-events-none absolute left-1/2 top-16 z-40 -translate-x-1/2 rotate-[8deg] border-4 border-[color:var(--c-ink)] bg-card px-4 py-1 font-label text-2xl text-card-foreground">
+                    SKIP
                   </div>
-                  <div>
-                    <Label>Networking Goals</Label>
-                    <div className="space-y-2 rounded-md border p-4 max-h-56 overflow-y-auto">
-                      {Array.from(new Set([
-                        ...networkingGoalOptions,
-                        ...(userProfile?.networkingTags || []),
-                        ...allProfiles.flatMap((p) => p.networkingTags || []),
-                      ])).map((goal) => (
-                        <div
-                          key={goal}
-                          className="flex items-center space-x-2"
-                        >
-                          <Checkbox
-                            id={`filter-goal-${goal.replace(/\s/g, '-')}`}
-                            checked={networkingGoalsFilter.includes(goal)}
-                            onCheckedChange={(checked) =>
-                              handleNetworkingTagChange(goal, !!checked)
-                            }
-                            className="flex-shrink-0"
-                          />
-                          <label
-                            htmlFor={`filter-goal-${goal.replace(/\s/g, '-')}`}
-                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex items-center justify-between flex-1 cursor-pointer"
-                          >
-                            <span>{goal}</span>
-                            {!networkingGoalOptions.includes(goal) && (
-                              <span className="text-[10px] text-primary font-normal">(custom)</span>
-                            )}
-                          </label>
-                        </div>
-                      ))}
+
+                  {swipeAnimation === 'right' && (
+                    <div className="pointer-events-none absolute inset-0 z-40 flex items-center justify-center">
+                      <div className="animate-stamp-pop flex items-center gap-2 border-4 border-[color:var(--c-ink)] bg-[color:var(--c-leaf)] px-5 py-2 font-label text-2xl text-[color:var(--c-ink)] sm:text-3xl">
+                        <Sparkles className="h-7 w-7" />
+                        CONNECT
+                      </div>
+                      <PixelStar className="animate-sparkle-float absolute left-1/4 top-1/4 h-8 w-8" />
+                      <PixelHeart className="animate-sparkle-float absolute right-1/4 top-1/3 h-7 w-7 [animation-delay:80ms]" />
+                      <PixelStar className="animate-sparkle-float absolute bottom-1/3 left-1/3 h-6 w-6 [animation-delay:120ms]" />
+                      <PixelHeart className="animate-sparkle-float absolute right-1/3 top-1/2 h-6 w-6 [animation-delay:160ms]" />
                     </div>
-                  </div>
-                  <div>
-                    <Label htmlFor="company">Company</Label>
-                    <Input
-                      id="company"
-                      placeholder="e.g., Google"
-                      value={companyFilter}
-                      onChange={(e) => setCompanyFilter(e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="college">College</Label>
-                    <Input
-                      id="college"
-                      placeholder="e.g., MIT"
-                      value={collegeFilter}
-                      onChange={(e) => setCollegeFilter(e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="tech-stack">
-                      Tech Stack (comma-separated)
-                    </Label>
-                    <Input
-                      id="tech-stack"
-                      placeholder="e.g., React, Python"
-                      value={techStackFilter}
-                      onChange={(e) => setTechStackFilter(e.target.value)}
+                  )}
+
+                  {swipeAnimation === 'left' && (
+                    <div className="pointer-events-none absolute inset-0 z-40 flex items-center justify-center">
+                      <div className="animate-stamp-pop-left flex items-center gap-2 border-4 border-[color:var(--c-ink)] bg-card px-5 py-2 font-label text-2xl text-card-foreground sm:text-3xl">
+                        <RotateCcw className="h-6 w-6" />
+                        SKIP
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="h-full w-full overflow-y-auto">
+                    <ProfileCard
+                      profile={currentProfile}
+                      labels={getDiscoveryLabels(userProfile, currentProfile)}
+                      onBlocked={() => removeFromDeck(currentProfile.id)}
                     />
                   </div>
                 </div>
-              </ScrollArea>
-              <SheetFooter className="p-6 border-t">
-                <SheetClose asChild>
-                  <Button onClick={handleApplyFilters}>Apply Filters</Button>
-                </SheetClose>
-              </SheetFooter>
-            </SheetContent>
-          </Sheet>
-        </div>
-
-        <div className="w-full max-w-sm flex flex-col items-center space-y-6">
-  <div className="relative w-full">
-    {loading ? (
-      <Card className="flex flex-col items-center justify-center text-center h-[min(520px,70vh)]">
-        <CardHeader>
-          <CardTitle className="font-headline text-2xl">
-            Pulling threads to weave your network…
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="w-full px-4 sm:px-8">
-          <Skeleton className="h-[min(380px,55vh)] w-full" />
-        </CardContent>
-      </Card>
-    ) : limitReached || noMoreProfiles ? (
-      <Card className="flex flex-col items-center justify-center text-center h-[min(520px,70vh)] p-6">
-        <Stacky className="mb-3 w-20" />
-        <CardHeader className="p-0 space-y-1 mb-4">
-          <CardTitle className="font-headline text-4xl font-bold leading-none">
-            {!noMoreProfiles
-              ? "You're Out of Swipes!"
-              : loadError
-                ? "Couldn't Load Profiles"
-                : allProfiles.length > 0 || swipedIds.size > 0
-                  ? "You've Seen Everyone"
-                  : "No Other Profiles Yet"}
-          </CardTitle>
-          <CardDescription className="text-xs sm:text-sm max-w-xs mx-auto">
-            {!noMoreProfiles
-              ? `You've reached your daily limit of ${SWIPE_LIMIT} swipes. Check back tomorrow!`
-              : loadError
-                ? loadError
-                : allProfiles.length > 0 || swipedIds.size > 0
-                  ? "There are no more profiles to show right now. Clear any filters or check back later."
-                  : "You're currently the only developer registered in the database! As more tech professionals sign up, their profiles will appear here."}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="p-0 flex flex-col gap-2 w-full max-w-xs">
-          <Button variant="default" size="sm" asChild className="w-full">
-            <Link href="/dashboard/recommendations">
-              <Sparkles className="w-4 h-4 mr-1.5" />
-              Chat with StackBot AI
-            </Link>
-          </Button>
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={handlePreviewMatch}
-            className="w-full"
-          >
-            <PartyPopper className="w-4 h-4 mr-1.5" />
-            Preview Match Handshake Animation
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => fetchProfiles()}
-            className="w-full"
-          >
-            <RotateCcw className="w-3.5 h-3.5 mr-1.5" />
-            Check for New Profiles
-          </Button>
-        </CardContent>
-      </Card>
-    ) : (
-      <div className="relative h-[min(520px,70vh)] w-full">
-        {/* The next card waits underneath */}
-        {filteredProfiles[currentIndex + 1] && (
-          <div aria-hidden="true" className="px-box absolute inset-0 translate-x-2 translate-y-2 rotate-1 bg-secondary" />
-        )}
-
-        <div
-          key={currentProfile.id}
-          ref={dragRef}
-          {...dragHandlers}
-          className={cn(
-            'px-swipe-card px-raised absolute inset-0 cursor-grab overflow-hidden bg-card active:cursor-grabbing',
-            swipeAnimation ? animationClass : rewinding ? 'animate-rewind' : 'animate-card-in'
-          )}
-        >
-          <PixelDissolve active={!!swipeAnimation} />
-
-          {/* Stamps fade in with the drag */}
-          <div aria-hidden="true" className="px-stamp-like pointer-events-none absolute left-1/2 top-16 z-40 -translate-x-1/2 -rotate-[8deg] border-4 border-[color:var(--c-ink)] bg-[color:var(--c-leaf)] px-4 py-1 font-label text-2xl text-[color:var(--c-ink)]">
-            CONNECT
-          </div>
-          <div aria-hidden="true" className="px-stamp-nope pointer-events-none absolute left-1/2 top-16 z-40 -translate-x-1/2 rotate-[8deg] border-4 border-[color:var(--c-ink)] bg-card px-4 py-1 font-label text-2xl text-card-foreground">
-            DEFERRED
-          </div>
-
-          {/* SWIPE RIGHT OVERLAY: CONNECT STAMP */}
-          {swipeAnimation === 'right' && (
-            <div className="pointer-events-none absolute inset-0 z-40 flex items-center justify-center">
-              <div className="animate-stamp-pop flex items-center gap-2 border-4 border-[color:var(--c-ink)] bg-[color:var(--c-leaf)] px-5 py-2 font-label text-2xl text-[color:var(--c-ink)] sm:text-3xl">
-                <Sparkles className="h-7 w-7" />
-                CONNECT
               </div>
-              <PixelStar className="animate-sparkle-float absolute left-1/4 top-1/4 h-8 w-8" />
-              <PixelHeart className="animate-sparkle-float absolute right-1/4 top-1/3 h-7 w-7 [animation-delay:80ms]" />
-              <PixelStar className="animate-sparkle-float absolute bottom-1/3 left-1/3 h-6 w-6 [animation-delay:120ms]" />
-              <PixelHeart className="animate-sparkle-float absolute right-1/3 top-1/2 h-6 w-6 [animation-delay:160ms]" />
-            </div>
-          )}
-
-          {/* SWIPE LEFT OVERLAY: DEFERRED STAMP */}
-          {swipeAnimation === 'left' && (
-            <div className="pointer-events-none absolute inset-0 z-40 flex items-center justify-center">
-              <div className="animate-stamp-pop-left flex items-center gap-2 border-4 border-[color:var(--c-ink)] bg-card px-5 py-2 font-label text-2xl text-card-foreground sm:text-3xl">
-                <RotateCcw className="h-6 w-6" />
-                DEFERRED
-              </div>
-            </div>
-          )}
-
-          <div className="h-full w-full overflow-y-auto">
-            <ProfileCard profile={currentProfile} />
+            )}
           </div>
-        </div>
-      </div>
-    )}
-  </div>
-
 
           <div className="flex flex-col items-center space-y-4">
             <div className="flex items-center justify-center space-x-5">
-                <Button variant="outline" size="icon" aria-label="Defer this profile" className="h-16 w-16" onClick={() => handleSwipe('dislike')} disabled={limitReached || !!swipeAnimation || !currentProfile}>
-                    <XIcon className="h-8 w-8" />
-                </Button>
-                <Button variant="secondary" size="icon" aria-label="Undo last swipe" className="h-12 w-12" onClick={handleUndo} disabled={currentIndex === 0 || limitReached || !!swipeAnimation || !currentProfile}>
-                    <Undo className="h-6 w-6" />
-                </Button>
-                <Button size="icon" aria-label="Connect with this profile" className="h-16 w-16" onClick={() => handleSwipe('like')} disabled={limitReached || !!swipeAnimation || !currentProfile}>
-                    <Heart className="h-8 w-8" />
-                </Button>
+              <Button variant="outline" size="icon" aria-label="Skip this person" className="h-16 w-16" onClick={() => handleSwipe('dislike')} disabled={swipeLocked}>
+                <XIcon className="h-8 w-8" />
+              </Button>
+              <Button variant="secondary" size="icon" aria-label="Undo last swipe" className="h-12 w-12" onClick={handleUndo} disabled={currentIndex === 0 || swipeLocked}>
+                <Undo className="h-6 w-6" />
+              </Button>
+              <Button size="icon" aria-label="Connect with this person" className="h-16 w-16" onClick={() => handleSwipe('like')} disabled={swipeLocked}>
+                <Heart className="h-8 w-8" />
+              </Button>
             </div>
             <div className="flex min-h-12 flex-col items-center gap-2 text-center text-sm text-muted-foreground">
-                {!limitReached && !noMoreProfiles && (
-                  <>
-                    <CoinRow total={SWIPE_LIMIT} used={swipes} />
-                    <p>Swipes remaining: {SWIPE_LIMIT - swipes} / {SWIPE_LIMIT}</p>
-                    <p className="hidden text-xs md:block">Drag the card, or use the arrow keys. Z to undo.</p>
-                  </>
-                )}
+              {!limitReached && !noMoreProfiles && (
+                <>
+                  <CoinRow total={SWIPE_LIMIT} used={swipes} />
+                  <p>Swipes remaining: {SWIPE_LIMIT - swipes} / {SWIPE_LIMIT}</p>
+                  <p className="hidden text-xs md:block">Drag the card, or use the arrow keys. Z to undo.</p>
+                </>
+              )}
             </div>
           </div>
         </div>
       </div>
 
-      {/* MATCH CELEBRATION DIALOG */}
       <MatchCelebrationDialog
         open={showMatchDialog}
         onOpenChange={setShowMatchDialog}

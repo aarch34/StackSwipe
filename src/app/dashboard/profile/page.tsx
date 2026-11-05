@@ -16,22 +16,18 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { User as UserIcon, Upload, Plus, X, Sparkles } from '@/components/px-icons';
 import { Checkbox } from '@/components/ui/checkbox';
 import { uploadToCloudinary } from '@/lib/cloudinary'; // Add this import
-
-const PRESET_EXPERIENCE_LEVELS = [
-    { value: 'Intern', label: 'Intern' },
-    { value: 'Junior', label: 'Junior (0-2 yrs)' },
-    { value: 'Mid-level', label: 'Mid-level (2-5 yrs)' },
-    { value: 'Senior', label: 'Senior (5-8 yrs)' },
-    { value: 'Lead', label: 'Lead / Staff (8+ yrs)' },
-    { value: 'Manager', label: 'Engineering Manager' },
-    { value: 'Founder', label: 'Founder / Co-Founder' },
-    { value: 'Freelancer', label: 'Freelancer / Consultant' },
-    { value: 'Student', label: 'Student / Self-Taught' },
-];
+import { TagPicker } from '@/components/tag-picker';
+import { BlockedPeopleList } from '@/components/safety-actions';
+import {
+    CAN_HELP_OPTIONS,
+    CONVERSATION_PREFERENCES,
+    EXPERIENCE_LEVELS as PRESET_EXPERIENCE_LEVELS,
+    GUIDANCE_OPTIONS,
+    LEARNING_OPTIONS,
+} from '@/lib/guidance';
 
 const networkingGoalOptions = [
     'Hackathon Teammate',
-    'Looking for a Mentor / Mentee',
     'Looking for a Collaborator / Partner',
     'Looking to Hire / Get Hired',
     'Looking for Friends / Peers in my Field',
@@ -63,6 +59,12 @@ export default function ProfilePage() {
                 headline: initialProfile.headline ?? '',
                 bio: initialProfile.bio ?? '',
                 currentWork: initialProfile.currentWork ?? '',
+                jobTitle: initialProfile.jobTitle ?? '',
+                industry: initialProfile.industry ?? '',
+                canHelpWith: initialProfile.canHelpWith ?? [],
+                currentlyLearning: initialProfile.currentlyLearning ?? [],
+                guidanceWanted: initialProfile.guidanceWanted ?? [],
+                conversationPreferences: initialProfile.conversationPreferences ?? [],
                 location: initialProfile.location ?? '',
                 age: initialProfile.age ?? 18,
                 gender: initialProfile.gender ?? '',
@@ -191,8 +193,8 @@ export default function ProfilePage() {
         <main className="container mx-auto p-4 md:p-8">
              <Card className="max-w-3xl mx-auto">
                 <CardHeader>
-                    <CardTitle className="font-headline text-2xl">Edit Your Profile</CardTitle>
-                    <CardDescription>Keep your profile up-to-date to get the best matches.</CardDescription>
+                    <CardTitle className="font-headline text-4xl leading-none">Your profile</CardTitle>
+                    <CardDescription>You don&apos;t need to know everything to belong here.</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <form onSubmit={handleSubmit} className="space-y-6">
@@ -264,9 +266,55 @@ export default function ProfilePage() {
                             <Textarea id="bio" name="bio" value={profile.bio} onChange={handleInputChange} rows={4} />
                         </div>
                         
-                        <div className="space-y-2">
-                            <Label htmlFor="currentWork">Current Work</Label>
-                            <Input id="currentWork" name="currentWork" value={profile.currentWork} onChange={handleInputChange} />
+                        <section className="space-y-5 border-2 bg-muted p-4">
+                            <div className="space-y-2">
+                                <Label className="text-base font-semibold">What I can help with</Label>
+                                <p className="text-xs text-muted-foreground">Your experience could save someone else hours of figuring things out.</p>
+                                <TagPicker
+                                    options={CAN_HELP_OPTIONS}
+                                    value={profile.canHelpWith ?? []}
+                                    onChange={(canHelpWith) => setProfile(prev => prev ? { ...prev, canHelpWith } : null)}
+                                    customPlaceholder="Add something else you could help with"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label className="text-base font-semibold">What I&apos;m currently learning</Label>
+                                <TagPicker
+                                    options={LEARNING_OPTIONS}
+                                    value={profile.currentlyLearning ?? []}
+                                    onChange={(currentlyLearning) => setProfile(prev => prev ? { ...prev, currentlyLearning } : null)}
+                                    customPlaceholder="Add something else you are learning"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label className="text-base font-semibold">What I&apos;d love guidance on</Label>
+                                <TagPicker
+                                    options={GUIDANCE_OPTIONS}
+                                    value={profile.guidanceWanted ?? []}
+                                    onChange={(guidanceWanted) => setProfile(prev => prev ? { ...prev, guidanceWanted } : null)}
+                                    customPlaceholder="Add something else you would like guidance on"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label className="text-base font-semibold">I&apos;m up for</Label>
+                                <TagPicker
+                                    options={CONVERSATION_PREFERENCES}
+                                    value={profile.conversationPreferences ?? []}
+                                    onChange={(conversationPreferences) => setProfile(prev => prev ? { ...prev, conversationPreferences } : null)}
+                                    allowCustom={false}
+                                />
+                            </div>
+                        </section>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-2">
+                                <Label htmlFor="currentWork">Current role</Label>
+                                <Input id="currentWork" name="currentWork" value={profile.currentWork} onChange={handleInputChange} placeholder="e.g., Student, Software Engineer" />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="industry">Industry</Label>
+                                <Input id="industry" name="industry" value={profile.industry ?? ''} onChange={handleInputChange} placeholder="e.g., Fintech, Education" />
+                            </div>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -389,8 +437,8 @@ export default function ProfilePage() {
                         
                         <div className="space-y-3">
                             <div className="flex items-center justify-between">
-                                <Label className="text-base font-semibold">Networking Goals</Label>
-                                <span className="text-xs text-muted-foreground">Select what you are looking for</span>
+                                <Label className="text-base font-semibold">Also up for</Label>
+                                <span className="text-xs text-muted-foreground">Optional</span>
                             </div>
 
                             <div className="space-y-2 rounded-md border p-4 bg-card">
@@ -530,6 +578,9 @@ export default function ProfilePage() {
                             </Button>
                         </div>
                     </form>
+                    <div className="mt-6">
+                        <BlockedPeopleList />
+                    </div>
                 </CardContent>
             </Card>
         </main>

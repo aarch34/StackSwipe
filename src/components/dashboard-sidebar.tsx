@@ -8,9 +8,11 @@ import {
   Sparkles,
   User,
   LogOut,
- 
+  Heart,
 } from '@/components/px-icons';
 import { useAuth } from '@/hooks/use-auth';
+import { useUnreadCounts } from '@/hooks/use-unread-counts';
+import { CommunityPrinciplesDialog } from '@/components/community-principles';
 import {
   Sidebar,
   SidebarHeader,
@@ -31,13 +33,15 @@ const menuItems = [
   {
     href: '/dashboard/recommendations',
     icon: Sparkles,
-    label: 'AI Recommendations',
+    label: 'StackBot',
   },
 ];
 
 export function DashboardSidebar() {
   const pathname = usePathname();
   const { profile, logout } = useAuth();
+  const { counts } = useUnreadCounts();
+  const unreadTotal = Object.values(counts).reduce((total, count) => total + count, 0);
 
   const isActive = (href: string) => {
     if (href === '/dashboard') return pathname === '/dashboard';
@@ -78,6 +82,12 @@ export function DashboardSidebar() {
                 <Link href={item.href} prefetch={true}>
                   <item.icon />
                   <span>{item.label}</span>
+                  {item.href === '/dashboard/messages' && unreadTotal > 0 && (
+                    <span className="ml-auto border-2 bg-primary px-1.5 text-xs font-semibold leading-tight text-primary-foreground">
+                      {unreadTotal}
+                      <span className="sr-only"> unread</span>
+                    </span>
+                  )}
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -99,6 +109,16 @@ export function DashboardSidebar() {
                </div>
             </SidebarMenuItem>
            )}
+          <SidebarMenuItem>
+            <CommunityPrinciplesDialog
+              trigger={
+                <SidebarMenuButton tooltip={{ children: 'Community principles', side: 'right' }}>
+                  <Heart />
+                  <span>Community principles</span>
+                </SidebarMenuButton>
+              }
+            />
+          </SidebarMenuItem>
           <SidebarMenuItem>
             <SidebarMenuButton
               asChild

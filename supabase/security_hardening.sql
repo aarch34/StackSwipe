@@ -5,6 +5,9 @@
 --
 -- Deploy the matching app code at the same time. The swipe deck and match list
 -- read other users through the user_profiles view created below.
+--
+-- If you re-run this file by itself after guidance_platform.sql, run that file
+-- again afterwards, because it replaces some of these policies.
 -- ==============================================================================
 
 -- ------------------------------------------------------------------------------
@@ -158,28 +161,34 @@ using (public.is_admin());
 
 -- Runs with the view owner's rights, so it is the one way to read other users.
 -- Do not add email, firebase_uid or any moderation column here.
-create or replace view public.user_profiles as
-select
-  id,
-  name,
-  age,
-  gender,
-  headline,
-  bio,
-  job_title,
-  company,
-  experience_level,
-  location,
-  photo_url,
-  tech_stack,
-  interests,
-  networking_tags,
-  college,
-  current_work,
-  links,
-  onboarding_completed,
-  onboarding_step
-from public.users;
+-- guidance_platform.sql later adds columns, so only create the view if it is missing.
+do $$
+begin
+  if to_regclass('public.user_profiles') is null then
+    create view public.user_profiles as
+    select
+      id,
+      name,
+      age,
+      gender,
+      headline,
+      bio,
+      job_title,
+      company,
+      experience_level,
+      location,
+      photo_url,
+      tech_stack,
+      interests,
+      networking_tags,
+      college,
+      current_work,
+      links,
+      onboarding_completed,
+      onboarding_step
+    from public.users;
+  end if;
+end $$;
 
 revoke all on public.user_profiles from public, anon, authenticated;
 grant select on public.user_profiles to authenticated;

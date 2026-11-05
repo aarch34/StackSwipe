@@ -10,32 +10,33 @@ import { PixelEdge } from '@/components/pixel/pixel-edge';
 import { Ribbon } from '@/components/pixel/ribbon';
 import { Cloud, CoinRow, Flower, PixelHeart, PixelStar, Stacky } from '@/components/pixel/sprites';
 import { DemoDeck } from './demo-deck';
+import { COMMUNITY_PRINCIPLES } from '@/lib/guidance';
 import { cn } from '@/lib/utils';
 
 const TOTAL_COINS = 10;
 
 const STEPS = [
   {
-    title: 'Build your character',
-    body: 'Five quick steps: your photo, your stack, your links, and what you are looking for.',
+    title: 'Say where you are',
+    body: 'What you can help with, what you are learning and what you would love guidance on. No impressive job title needed.',
     tone: 'bg-[color:var(--c-violet)] text-white',
     tilt: '-rotate-3',
   },
   {
-    title: 'Swipe the deck',
-    body: 'Right to connect, left to defer. Filter by stack, company, college or location.',
+    title: 'Find your people',
+    body: 'Swipe through people you can learn from and people you can help. Right to connect, left to skip.',
     tone: 'bg-[color:var(--c-tomato)] text-[color:var(--c-ink)] lg:mt-10',
     tilt: 'rotate-2',
   },
   {
     title: 'Make the handshake',
-    body: 'When you both swipe right, it is a match and your chat opens.',
+    body: 'When you both swipe right, your chat opens. Messaging is free for everyone.',
     tone: 'bg-[color:var(--c-pink)] text-[color:var(--c-ink)]',
     tilt: '-rotate-1',
   },
   {
-    title: 'Never open cold',
-    body: 'Stuck on the first line? Get icebreakers written from both of your profiles.',
+    title: 'Just say hello',
+    body: 'Not sure what to say? Get a few ideas based on both your profiles, then make them your own.',
     tone: 'bg-[color:var(--c-butter)] text-[color:var(--c-ink)] lg:mt-10',
     tilt: 'rotate-3',
   },
@@ -131,22 +132,23 @@ export function LandingPage() {
           <Cloud className="px-drift absolute right-[4%] top-1/2 hidden w-24 opacity-80 [animation-delay:-4s] lg:block" />
           <Flower className="absolute -bottom-2 left-[42%] hidden w-24 lg:block" />
 
-          <div className="container relative mx-auto grid items-center gap-10 px-4 pb-20 pt-12 sm:px-6 lg:grid-cols-[1.25fr_1fr] lg:px-8 lg:pb-28 lg:pt-16">
+          <div className="container relative mx-auto grid items-center gap-10 px-4 pb-20 pt-12 sm:px-6 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)] lg:px-8 lg:pb-28 lg:pt-16">
             <div>
               <p data-hero-line className="font-label text-sm sm:text-base">
-                For developers, designers, founders and students
+                A community where people connect, learn, share and grow together
               </p>
-              <h1 className="mt-3 font-headline text-[27vw] font-bold leading-[0.82] sm:text-[20vw] lg:text-[clamp(7rem,14vw,14rem)]">
-                <span data-hero-line className="block whitespace-nowrap">Find your</span>
-                <span data-hero-line className="block whitespace-nowrap">player two</span>
+              <h1 className="mt-3 font-headline text-[22vw] font-bold leading-[0.82] sm:text-[20vw] lg:text-[clamp(5rem,10vw,11rem)]">
+                <span data-hero-line className="block whitespace-nowrap">Everyone</span>
+                <span data-hero-line className="block whitespace-nowrap">starts</span>
+                <span data-hero-line className="block whitespace-nowrap">somewhere</span>
               </h1>
               <p data-hero-line className="mt-6 max-w-lg text-base font-medium sm:text-lg">
-                Swipe through people who build things. When you both swipe right, the chat opens.
+                Find people who can guide you, share what you know, and discover a community where every question is welcome.
               </p>
               <div data-hero-line className="mt-8 flex flex-wrap items-center gap-5">
                 <Button asChild size="lg" className="group h-14 bg-[color:var(--c-butter)] px-8 text-2xl text-[color:var(--c-ink)]">
                   <Link href="/auth">
-                    Press start
+                    Find Your People
                     <ArrowRight className="h-6 w-6 transition-transform duration-100 group-hover:translate-x-1" />
                   </Link>
                 </Button>
@@ -164,7 +166,7 @@ export function LandingPage() {
 
         {/* RIBBONS */}
         <div className="relative z-10 -mt-5 -rotate-1 scale-[1.04]">
-          <Ribbon text="Find a hackathon teammate. Find a mentor. Find your cofounder." />
+          <Ribbon text="No question is too basic. Everyone has something to teach. Everyone has something to learn." />
         </div>
 
         {/* HOW IT WORKS */}
@@ -210,10 +212,32 @@ export function LandingPage() {
               <CoinRow
                 total={TOTAL_COINS}
                 used={coinsUsed}
-                className="[&>span]:h-7 [&>span]:w-7 sm:[&>span]:h-10 sm:[&>span]:w-10"
+                className="[&>span]:h-5 [&>span]:w-5 min-[375px]:[&>span]:h-7 min-[375px]:[&>span]:w-7 sm:[&>span]:h-10 sm:[&>span]:w-10"
               />
               <p className="font-label text-sm">Back tomorrow when you run out</p>
             </div>
+          </div>
+        </section>
+
+        {/* PRINCIPLES */}
+        <section className="bg-[color:var(--c-butter)] py-20 text-[color:var(--c-ink)]">
+          <div className="container mx-auto grid gap-10 px-4 sm:px-6 lg:grid-cols-2 lg:px-8">
+            <div data-reveal>
+              <h2 className="font-headline text-[clamp(4rem,10vw,8.5rem)] font-bold leading-[0.85]">
+                How we look after each other
+              </h2>
+              <p className="mt-5 max-w-md text-lg font-medium">
+                You don&apos;t need to be successful, experienced or influential to deserve a connection. Your experience could save someone else hours of figuring things out.
+              </p>
+            </div>
+            <ol data-reveal className="grid content-start gap-3">
+              {COMMUNITY_PRINCIPLES.map((principle, index) => (
+                <li key={principle} className="px-box flex items-baseline gap-4 bg-card p-4 text-card-foreground">
+                  <span className="font-label text-sm">{index + 1}</span>
+                  <span className="font-medium">{principle}</span>
+                </li>
+              ))}
+            </ol>
           </div>
         </section>
 
@@ -254,6 +278,7 @@ export function LandingPage() {
               <Link href="/signup">Join StackSwipe</Link>
             </Button>
             <PixelHeart className="h-10 w-10" />
+            <p className="font-headline text-2xl font-semibold">Find your people. Share what you know. Grow together.</p>
           </div>
 
           <div className="relative mt-10">

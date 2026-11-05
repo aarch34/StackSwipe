@@ -176,8 +176,13 @@ export async function GET(request: NextRequest) {
     const activeWeek = users.length;
     const retentionRate = userTotal > 0 ? Math.min(100, Math.round((activeWeek / userTotal) * 100)) : 0;
 
+    // Null until guidance_platform.sql has been applied
+    const { data: mission, error: missionError } = await sb.rpc('admin_mission_metrics');
+    if (missionError) console.warn('Mission metrics unavailable:', missionError.message);
+
     return NextResponse.json({
       range,
+      mission: mission ?? null,
       timeSeries,
       summary: {
         totalNewUsers: users.length,

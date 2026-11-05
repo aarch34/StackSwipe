@@ -13,7 +13,7 @@ const body = Space_Grotesk({ subsets: ['latin'], variable: '--font-body', displa
 
 export const metadata: Metadata = {
   title: 'StackSwipe',
-  description: 'Swipe to meet developers, designers, founders and students. When you both swipe right, you can message.',
+  description: 'Find your people. Share what you know. Grow together.',
 };
 
 export default function RootLayout({

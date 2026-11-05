@@ -11,10 +11,10 @@ import { cn } from '@/lib/utils';
 
 // Sample roles for the demo only. They are not real members.
 const SAMPLES = [
-  { role: 'Backend engineer', goal: 'Mentoring juniors', stack: ['Go', 'Postgres', 'Redis'], tone: 'bg-[color:var(--c-violet)] text-white' },
-  { role: 'Frontend developer', goal: 'Hackathon teammate', stack: ['React', 'TypeScript', 'CSS'], tone: 'bg-[color:var(--c-butter)] text-[color:var(--c-ink)]' },
-  { role: 'Startup founder', goal: 'Hiring a first engineer', stack: ['SaaS', 'Next.js', 'Stripe'], tone: 'bg-[color:var(--c-peach)] text-[color:var(--c-ink)]' },
-  { role: 'CS student', goal: 'Looking for a mentor', stack: ['Python', 'SQL', 'Git'], tone: 'bg-[color:var(--c-tomato)] text-[color:var(--c-ink)]' },
+  { role: 'Backend engineer', goal: 'Happy to help beginners', stack: ['Go', 'Postgres', 'Redis'], tone: 'bg-[color:var(--c-violet)] text-white' },
+  { role: 'Frontend developer', goal: 'Learning system design', stack: ['React', 'TypeScript', 'CSS'], tone: 'bg-[color:var(--c-butter)] text-[color:var(--c-ink)]' },
+  { role: 'Startup founder', goal: 'Sharing what I learned starting up', stack: ['SaaS', 'Next.js', 'Stripe'], tone: 'bg-[color:var(--c-peach)] text-[color:var(--c-ink)]' },
+  { role: 'CS student', goal: 'Looking for help with a first project', stack: ['Python', 'SQL', 'Git'], tone: 'bg-[color:var(--c-tomato)] text-[color:var(--c-ink)]' },
 ];
 
 export function DemoDeck() {
@@ -91,7 +91,7 @@ export function DemoDeck() {
                 aria-hidden="true"
                 className="px-stamp-nope absolute left-4 top-4 z-20 -rotate-[8deg] border-4 border-current bg-card px-2 py-1 font-label text-lg text-card-foreground"
               >
-                Deferred
+                Skip
               </div>
 
               <p className="font-label text-xs">Sample card {index + 1} of {SAMPLES.length}</p>
@@ -120,7 +120,7 @@ export function DemoDeck() {
           onClick={() => swipe('left')}
         >
           <XIcon className="h-7 w-7" />
-          <span className="sr-only">Defer this sample card</span>
+          <span className="sr-only">Skip this sample card</span>
         </Button>
         <p className="font-label text-xs text-[color:var(--c-ink)]">Drag me</p>
         <Button

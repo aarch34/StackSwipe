@@ -35,7 +35,7 @@
 Pink is never used for text on cream (2.29:1). Focus ring is violet in light and butter at night.
 
 ## Type
-- **Pixelify Sans:** headings and button labels.
+- **Handjet:** headings and button labels.
 - **Silkscreen:** short labels we write ourselves. Never user content, because it has no lowercase.
 - **Space Grotesk:** everything people read: body, chat, forms, tables.
 
@@ -50,3 +50,9 @@ No radius. `.px-box` draws a notched outline with stacked `box-shadow`. `.px-rai
 
 ## Admin
 Same tokens forced to night, pixel headings, no sprites or curtains. Tables stay in Space Grotesk.
+
+## Voice
+- Welcoming and plain. A beginner should feel as at home as someone with 15 years of experience.
+- Everyone can both teach and learn, so avoid mentor and mentee labels.
+- Never imply that anyone owes a reply, and never make a credential sound required.
+- Reminders such as "Everyone starts somewhere" appear once per screen at most.

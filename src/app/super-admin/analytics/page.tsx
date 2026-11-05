@@ -36,6 +36,8 @@ import {
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 
+const percentOf = (part = 0, whole = 0) => (whole > 0 ? Math.round((part / whole) * 100) : 0);
+
 export default function PlatformAnalyticsPage() {
   const { toast } = useToast();
   const [range, setRange] = useState<'today' | '7d' | '30d' | '90d' | 'custom'>('30d');
@@ -43,6 +45,7 @@ export default function PlatformAnalyticsPage() {
   const [customEnd, setCustomEnd] = useState('');
   const [timeSeries, setTimeSeries] = useState<any[]>([]);
   const [summary, setSummary] = useState<any>(null);
+  const [mission, setMission] = useState<Record<string, number> | null>(null);
   const [loading, setLoading] = useState(true);
 
   async function fetchAnalytics() {
@@ -65,6 +68,7 @@ export default function PlatformAnalyticsPage() {
         const json = await res.json();
         setTimeSeries(json.timeSeries || []);
         setSummary(json.summary || null);
+        setMission(json.mission || null);
       } else {
         const err = await res.json().catch(() => ({}));
         toast({ title: 'Error loading analytics', description: err.error || 'Failed to fetch analytics data', variant: 'destructive' });
@@ -175,6 +179,55 @@ export default function PlatformAnalyticsPage() {
           <p className="text-[10px] text-slate-400 font-mono mt-0.5">7-Day Engagement</p>
         </Card>
       </div>
+
+      {/* MISSION METRICS */}
+      {mission && (
+        <section className="space-y-3">
+          <div>
+            <h2 className="text-base font-bold text-white">Mission metrics</h2>
+            <p className="text-xs text-slate-400">
+              All-time totals only. Are people finding guidance, sharing knowledge and having real conversations?
+            </p>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5">
+            {[
+              { label: 'Registered users', value: mission.registeredUsers },
+              { label: 'Completed profiles', value: mission.completedProfiles },
+              { label: 'Willing to help', value: mission.willingToHelp },
+              { label: 'Seeking guidance', value: mission.seekingGuidance },
+              { label: 'Both learning and helping', value: mission.learningAndHelping },
+              { label: 'Total swipes', value: mission.totalSwipes },
+              { label: 'Successful matches', value: mission.totalMatches },
+              { label: 'Conversations started', value: mission.conversationsStarted },
+              {
+                label: 'First-message rate',
+                value: `${percentOf(mission.conversationsStarted, mission.totalMatches)}%`,
+                hint: 'Matches with at least one message',
+              },
+              {
+                label: 'Conversations with replies',
+                value: mission.conversationsWithReplies,
+                hint: `${percentOf(mission.conversationsWithReplies, mission.conversationsStarted)}% of those started`,
+              },
+              { label: 'Repeat conversations', value: mission.repeatConversations, hint: 'Replies, on 2 or more days' },
+              { label: 'AI icebreaker uses', value: mission.icebreakerUses },
+              {
+                label: '7-day retention',
+                value: `${percentOf(mission.retainedUsers, mission.eligibleForRetention)}%`,
+                hint: 'Active a week or more after joining',
+              },
+              { label: 'Matched over shared learning', value: mission.sharedLearningMatches, hint: 'Same topic listed by both' },
+              { label: 'Matched with someone who can help', value: mission.helpMatches, hint: 'Same topic listed by both' },
+            ].map((metric) => (
+              <Card key={metric.label} className="border-white/10 bg-slate-900/60 p-4 rounded-2xl">
+                <span className="text-xs text-slate-400 font-medium">{metric.label}</span>
+                <p className="text-2xl font-extrabold text-white mt-1.5">{metric.value ?? 0}</p>
+                {metric.hint && <p className="text-[10px] text-slate-400 mt-0.5">{metric.hint}</p>}
+              </Card>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* CHARTS GRID */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

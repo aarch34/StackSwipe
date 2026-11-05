@@ -165,12 +165,12 @@ export function AuthForm({ initialMode = 'login' }: AuthFormProps) {
             <Icons.logo className="h-10 w-10" />
           </div>
           <CardTitle className="font-headline text-4xl font-bold leading-none sm:text-5xl">
-            {mode === 'signup' ? 'Create an Account' : 'Welcome to StackSwipe'}
+            {mode === 'signup' ? 'Everyone starts somewhere' : 'Welcome back'}
           </CardTitle>
           <CardDescription className="text-sm text-muted-foreground mt-1">
             {mode === 'signup'
-              ? 'Join tech professionals networking daily'
-              : 'Sign in to access your matches, messages, and network'}
+              ? 'Join a community where every question is welcome'
+              : 'Your people and conversations are waiting'}
           </CardDescription>
         </CardHeader>
 

@@ -4,7 +4,16 @@ import React, { createContext, useContext, useEffect, useState, useCallback } fr
 import type { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
-import type { UserProfile, Match } from '@/lib/data';
+import { profileFromRow, type UserProfile, type Match } from '@/lib/data';
+
+// Dropped and retried if the guidance_platform.sql migration has not been applied yet.
+const GUIDANCE_COLUMNS = [
+  'can_help_with',
+  'currently_learning',
+  'guidance_wanted',
+  'conversation_preferences',
+  'industry',
+];
 
 export type AuthUser = User & {
   uid: string;
@@ -119,6 +128,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           techStack: data.tech_stack || [],
           interests: data.interests || [],
           networkingTags: data.networking_tags || [],
+          canHelpWith: data.can_help_with || [],
+          currentlyLearning: data.currently_learning || [],
+          guidanceWanted: data.guidance_wanted || [],
+          conversationPreferences: data.conversation_preferences || [],
+          industry: data.industry || '',
           college: data.college || '',
           currentWork: data.current_work || '',
           links: data.links || {},
@@ -149,8 +163,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           .from('users')
           .update({ last_active_at: new Date().toISOString() })
           .eq('id', data.id)
-          .then(() => {})
-          .catch(() => {});
+          .then(() => {}, () => {});
       } else {
         setProfile(null);
         setHasProfile(false);
@@ -322,50 +335,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         const primaryMatch = rawMatches[0];
         const allMatchIds = rawMatches.map((m) => m.id);
 
-        const otherUserProfile: UserProfile = otherUserData
-          ? {
-              id: otherUserData.id,
-              name: otherUserData.name || 'Developer',
-              age: otherUserData.age || 21,
-              bio: otherUserData.bio || '',
-              headline: otherUserData.headline || '',
-              jobTitle: otherUserData.job_title || 'Software Engineer',
-              company: otherUserData.company || '',
-              experienceLevel: otherUserData.experience_level || 'Junior',
-              location: otherUserData.location || '',
-              photoURL: otherUserData.photo_url || '',
-              techStack: otherUserData.tech_stack || [],
-              interests: otherUserData.interests || [],
-              networkingTags: otherUserData.networking_tags || [],
-              college: otherUserData.college || '',
-              currentWork: otherUserData.current_work || '',
-              links: otherUserData.links || {},
-              gender: otherUserData.gender || '',
-              onboarding_completed: Boolean(otherUserData.onboarding_completed),
-              onboarding_step: otherUserData.onboarding_step || 0,
-            }
-          : {
-              id: otherUserId,
-              name: 'Developer Match',
-              age: 21,
-              bio: 'Matched developer on StackSwipe',
-              headline: 'Software Engineer',
-              jobTitle: 'Developer',
-              company: '',
-              experienceLevel: 'Junior',
-              location: '',
-              photoURL: '',
-              techStack: [],
-              interests: [],
-              networkingTags: [],
-              college: '',
-              currentWork: '',
-              links: { github: '', linkedin: '' },
-              email: '',
-              gender: '',
-              onboarding_completed: true,
-              onboarding_step: 4,
-            };
+        const otherUserProfile: UserProfile = profileFromRow(otherUserData ?? { id: otherUserId });
+        if (!otherUserProfile.name) otherUserProfile.name = 'StackSwipe member';
 
         transformedMatches.push({
           id: primaryMatch.id,
@@ -504,6 +475,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         tech_stack: newProfile.techStack || [],
         interests: newProfile.interests || [],
         networking_tags: newProfile.networkingTags || [],
+        can_help_with: (newProfile.canHelpWith || []).filter(Boolean),
+        currently_learning: (newProfile.currentlyLearning || []).filter(Boolean),
+        guidance_wanted: (newProfile.guidanceWanted || []).filter(Boolean),
+        conversation_preferences: (newProfile.conversationPreferences || []).filter(Boolean),
+        industry: newProfile.industry || '',
         college: newProfile.college || '',
         current_work: newProfile.currentWork || '',
         links: newProfile.links || {},
@@ -526,6 +502,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         techStack: profileData.tech_stack,
         interests: profileData.interests,
         networkingTags: profileData.networking_tags,
+        canHelpWith: profileData.can_help_with,
+        currentlyLearning: profileData.currently_learning,
+        guidanceWanted: profileData.guidance_wanted,
+        conversationPreferences: profileData.conversation_preferences,
+        industry: profileData.industry,
         college: profileData.college,
         currentWork: profileData.current_work,
         links: profileData.links,
@@ -533,6 +514,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         gender: profileData.gender,
         onboarding_completed: isCompleted,
         onboarding_step: currentStep,
+        account_status: profile?.account_status,
+        suspended_until: profile?.suspended_until,
+        suspension_reason: profile?.suspension_reason,
+        ban_reason: profile?.ban_reason,
+        warning_count: profile?.warning_count,
       };
 
       // 1. Immediately update in-memory React state so the UI never waits
@@ -566,7 +552,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             .or(`id.eq.${user.id},firebase_uid.eq.${user.id}`)
             .maybeSingle();
 
-          let result;
+          let result: any;
           if (existingUser) {
             result = await supabase
               .from('users')
@@ -576,6 +562,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
               .maybeSingle();
           } else {
             result = await supabase.from('users').insert(profileData).select().maybeSingle();
+          }
+
+          const missingGuidanceColumn =
+            result?.error &&
+            (result.error.code === 'PGRST204' || result.error.code === '42703') &&
+            GUIDANCE_COLUMNS.some((column) => result?.error?.message?.includes(column));
+
+          if (missingGuidanceColumn) {
+            const withoutGuidance = { ...profileData };
+            GUIDANCE_COLUMNS.forEach((column) => delete withoutGuidance[column]);
+            result = existingUser
+              ? await supabase.from('users').update(withoutGuidance).eq('id', existingUser.id).select().maybeSingle()
+              : await supabase.from('users').insert(withoutGuidance).select().maybeSingle();
           }
 
           if (

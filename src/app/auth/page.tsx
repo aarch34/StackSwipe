@@ -3,7 +3,7 @@ import { Cloud, Flower, Stacky } from '@/components/pixel/sprites';
 
 export const metadata = {
   title: 'Join StackSwipe | Login & Sign Up',
-  description: 'Connect with tech professionals. Sign in with Google, GitHub, or Email.',
+  description: 'Join a community where every question is welcome. Sign in with Google, GitHub, or Email.',
 };
 
 export default function AuthPage() {

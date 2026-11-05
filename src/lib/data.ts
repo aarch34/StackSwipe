@@ -16,6 +16,11 @@ export type UserProfile = {
   techStack: string[];
   interests: string[];
   networkingTags: string[];
+  canHelpWith?: string[];
+  currentlyLearning?: string[];
+  guidanceWanted?: string[];
+  conversationPreferences?: string[];
+  industry?: string;
   links: {
     github: string;
     linkedin: string;
@@ -29,6 +34,36 @@ export type UserProfile = {
   ban_reason?: string | null;
   warning_count?: number;
 };
+
+/** Maps a row from users, user_profiles or discoverable_profiles without inventing any values. */
+export function profileFromRow(row: any): UserProfile {
+  return {
+    id: row.id,
+    name: row.name || '',
+    age: row.age,
+    gender: row.gender || '',
+    bio: row.bio || '',
+    headline: row.headline || '',
+    jobTitle: row.job_title || '',
+    company: row.company || '',
+    experienceLevel: row.experience_level || '',
+    location: row.location || '',
+    photoURL: row.photo_url || '',
+    techStack: row.tech_stack || [],
+    interests: row.interests || [],
+    networkingTags: row.networking_tags || [],
+    canHelpWith: row.can_help_with || [],
+    currentlyLearning: row.currently_learning || [],
+    guidanceWanted: row.guidance_wanted || [],
+    conversationPreferences: row.conversation_preferences || [],
+    industry: row.industry || '',
+    college: row.college || '',
+    currentWork: row.current_work || '',
+    links: { github: row.links?.github || '', linkedin: row.links?.linkedin || '' },
+    onboarding_completed: Boolean(row.onboarding_completed),
+    onboarding_step: row.onboarding_step || 0,
+  };
+}
 
 export type Message = {
   id: string;

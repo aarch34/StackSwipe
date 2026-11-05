@@ -21,7 +21,12 @@ const GEMINI_MODEL = 'gemini-2.5-flash';
 
 // Backup provider: Groq's edge intermittently answers 403 "Access denied" for
 // some networks, regardless of key or model.
-async function geminiChat(message: string): Promise<string> {
+async function geminiChat(
+  message: string,
+  systemPrompt: string,
+  maxTokens: number,
+  temperature: number
+): Promise<string> {
   const geminiKey = process.env.GEMINI_API_KEY;
   if (!geminiKey) throw new Error('GEMINI_API_KEY is not set');
 
@@ -31,11 +36,11 @@ async function geminiChat(message: string): Promise<string> {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-goog-api-key': geminiKey },
       body: JSON.stringify({
-        systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
+        systemInstruction: { parts: [{ text: systemPrompt }] },
         contents: [{ role: 'user', parts: [{ text: message }] }],
         generationConfig: {
-          temperature: 0.7,
-          maxOutputTokens: 800,
+          temperature,
+          maxOutputTokens: maxTokens,
           thinkingConfig: { thinkingBudget: 0 },
         },
       }),
@@ -55,6 +60,15 @@ async function geminiChat(message: string): Promise<string> {
 }
 
 export async function groqChat(message: string): Promise<string> {
+  return completeChat(message, SYSTEM_PROMPT);
+}
+
+/** Tries each Groq model in turn, then Gemini. */
+export async function completeChat(
+  message: string,
+  systemPrompt: string,
+  { maxTokens = 800, temperature = 0.7 }: { maxTokens?: number; temperature?: number } = {}
+): Promise<string> {
   let lastError: any = null;
 
   for (const model of CANDIDATE_MODELS) {
@@ -62,11 +76,11 @@ export async function groqChat(message: string): Promise<string> {
       const completion = await groq.chat.completions.create({
         model,
         messages: [
-          { role: 'system', content: SYSTEM_PROMPT },
+          { role: 'system', content: systemPrompt },
           { role: 'user', content: message },
         ],
-        temperature: 0.7,
-        max_tokens: 800,
+        temperature,
+        max_tokens: maxTokens,
       });
 
       const reply = completion.choices[0]?.message?.content;
@@ -78,7 +92,7 @@ export async function groqChat(message: string): Promise<string> {
   }
 
   try {
-    return await geminiChat(message);
+    return await geminiChat(message, systemPrompt, maxTokens, temperature);
   } catch (err: any) {
     console.warn('Gemini fallback failed:', err?.message || err);
   }

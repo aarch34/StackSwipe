@@ -75,16 +75,12 @@ export function MatchCelebrationDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-[94vw] max-w-md grid-cols-[minmax(0,1fr)] gap-0 overflow-hidden p-0 max-h-[92vh] overflow-y-auto">
         <div className="relative overflow-hidden bg-[color:var(--c-pink)] px-6 pb-6 pt-8 text-center text-[color:var(--c-ink)]">
-          <div className="mb-3 inline-flex items-center gap-1.5 bg-[color:var(--c-ink)] px-3 py-1 font-label text-xs text-[color:var(--c-cream)]">
-            200 OK: mutual handshake
-          </div>
-
           <DialogTitle className="font-headline text-5xl font-bold leading-none sm:text-6xl">
             It&apos;s a Handshake!
           </DialogTitle>
 
           <DialogDescription className="mx-auto mt-2 max-w-xs text-sm font-medium text-[color:var(--c-ink)]">
-            You and <span className="font-bold">{matchedProfile.name}</span> have connected threads. Your stacks align!
+            You and <span className="font-bold">{matchedProfile.name}</span>: looks like you have something to share with each other!
           </DialogDescription>
 
           {/* Two avatars, and two hands that walk in and shake */}
@@ -122,7 +118,7 @@ export function MatchCelebrationDialog({
               <div>
                 <h4 className="font-headline text-2xl font-semibold leading-none text-foreground">{matchedProfile.name}</h4>
                 <p className="text-xs text-muted-foreground">
-                  {matchedProfile.jobTitle || matchedProfile.headline || 'Software Developer'}
+                  {matchedProfile.jobTitle || matchedProfile.currentWork || matchedProfile.headline}
                   {matchedProfile.company ? ` at ${matchedProfile.company}` : ''}
                 </p>
               </div>
@@ -161,13 +157,9 @@ export function MatchCelebrationDialog({
             )}
           </div>
 
-          {/* Quick Icebreaker suggestion */}
-          <div className="flex items-center gap-2 border-2 bg-muted p-2.5 text-xs text-foreground">
-            <span className="font-semibold">Icebreaker:</span>
-            <span className="italic truncate">
-              &ldquo;Hey {matchedProfile.name}, great to connect! What are you building right now?&rdquo;
-            </span>
-          </div>
+          <p className="border-2 bg-muted p-2.5 text-xs text-foreground">
+            Not sure what to say? We&apos;ve got a few ideas in your chat. And no pressure: nobody owes a reply.
+          </p>
 
           {/* Action Buttons */}
           <div className="space-y-2 pt-1 pb-2">
@@ -178,7 +170,7 @@ export function MatchCelebrationDialog({
             >
               <Link href={`/dashboard/messages?userId=${matchedProfile.id}`} onClick={() => onOpenChange(false)}>
                 <MessageSquare className="mr-2 h-5 w-5" />
-                Start Chatting Now
+                Say hello
                 <ArrowRight className="ml-1.5 h-5 w-5" />
               </Link>
             </Button>
@@ -189,7 +181,7 @@ export function MatchCelebrationDialog({
               onClick={() => onOpenChange(false)}
               className="w-full"
             >
-              Keep Swiping & Discover More
+              Keep swiping
             </Button>
           </div>
         </div>

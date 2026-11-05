@@ -1,27 +1,35 @@
 # StackSwipe
 
- StackSwipe - Professional Networking App for Tech Professionals
-A Next.js 14 networking application that connects tech professionals through intelligent matching and meaningful professional conversations.
+**Find your people. Share what you know. Grow together.**
+
+StackSwipe is a community for peer-to-peer guidance. Everyone starts somewhere, and no question is too basic. It is not a mentorship marketplace: anyone can be a learner in one area and a helper in another, and messaging is free for everyone.
 
 ✨ Features
-🔥 Smart Professional Matching - Swipe-style interface to discover like-minded tech professionals
+🔥 Discovery - Swipe through people you can learn from and people you can help, with labels based on real profile overlap
 
-🤖 AI-Powered Recommendations - Intelligent networking suggestions based on skills, experience, and career goals
+🤖 AI icebreakers - Category-based first-message ideas from both profiles, always editable and never sent automatically
 
-💬 Professional Messaging - Connect and chat with industry peers and potential collaborators
+💬 Messaging - Unread counts, read receipts, typing indicators and quick-start prompts
 
-🎨 Modern UI/UX - Clean, responsive design built with Tailwind CSS and shadcn/ui
+🛡️ Safety - Report, block and unmatch, with rate limits on messages and AI use
 
-🔐 Secure Authentication - Supabase Auth with Google, GitHub, and Email/Password integration
+📊 Filtering - Combine background, learning topics and connection intent
 
-📊 Advanced Filtering - Filter by tech stack, experience level, location, and interests
+🎨 Pixel-arcade UI - See DESIGN.md
 
-🌙 Dark/Light Mode - Seamless theme switching for comfortable browsing
+🔐 Authentication - Supabase Auth with Google, GitHub, and Email/Password
 
-📱 Mobile-First - Optimized for mobile networking on the go
+## Database setup
+Run these in the Supabase SQL Editor, in order. For a brand new project, `schema.sql` already includes the last two.
+
+1. `supabase/schema.sql`
+2. `supabase/admin_migration.sql`
+3. `supabase/admin_rls_fix.sql`
+4. `supabase/security_hardening.sql`
+5. `supabase/guidance_platform.sql`
 
 🛠️ Tech Stack
-Frontend: Next.js 14, TypeScript, Tailwind CSS, shadcn/ui
+Frontend: Next.js 15, TypeScript, Tailwind CSS, shadcn/ui
 
 Backend: Next.js API Routes, Supabase
 
@@ -35,17 +43,15 @@ Deployment: Vercel
 
 UI Components: Radix UI, Lucide Icons
 
-Animations: Framer Motion, CSS Transforms
+Animations: CSS, plus GSAP and Lenis on the landing page
 
 🎯 Perfect For
-Software Developers looking to expand their professional network
+Beginners who are not sure what to learn next or who to ask
 
-Tech Entrepreneurs seeking co-founders and collaborators
+Students speaking to people who have already navigated their path
 
-Students wanting to connect with industry professionals
+Career switchers finding people who made the same move
 
-Remote Workers building meaningful professional relationships
+Experienced people sharing what they know, with no mentorship session to sell
 
-Career Switchers looking for mentorship and guidance
-
-Freelancers finding potential clients and project partners
+Peers at similar stages learning and growing together
