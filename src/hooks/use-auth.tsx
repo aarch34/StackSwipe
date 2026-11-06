@@ -283,13 +283,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
 
     try {
-      const { data: matchesData, error } = await supabase
+      const { data: matchesData, error, status } = await supabase
         .from('matches')
         .select('*')
         .contains('user_ids', [user.id]);
 
       if (error || !matchesData) {
-        if (error) console.error('Error loading matches:', error);
+        if (error) {
+          // Logged as text because the Next.js dev overlay prints plain objects as {}.
+          const reason = `Could not load matches: ${error.message}${error.code ? ` (${error.code})` : ''}`;
+          // Status 0 means the request never finished, such as a network drop or leaving the
+          // page. The matches already on screen are kept, so this is not an app error.
+          if (status === 0) console.warn(reason);
+          else console.error(reason);
+        }
         return;
       }
 
@@ -356,11 +363,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       setMatches(transformedMatches);
 
-      if (typeof window !== 'undefined') {
+      // Only a speed-up for the next visit, so a full browser storage must not count as a failure.
+      try {
         localStorage.setItem(`stackswipe_matches_${user.id}`, JSON.stringify(transformedMatches));
+      } catch (storageError) {
+        console.warn('Could not cache matches in this browser:', storageError);
       }
     } catch (error) {
-      console.error('Error loading matches:', error);
+      console.error(`Could not load matches: ${error instanceof Error ? error.message : String(error)}`);
     }
   }, [user, profile]);
 
@@ -406,6 +416,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const { data, error } = await supabase.auth.signUp({
       email,
       password: pass,
+      options: {
+        // Where the confirmation email's link lands. This URL must be on the Redirect URLs
+        // list in Supabase, or the link falls back to the project's Site URL.
+        emailRedirectTo: typeof window !== 'undefined' ? `${window.location.origin}/onboarding` : undefined,
+      },
     });
     if (error) throw error;
     return data;
@@ -446,6 +461,25 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     if (!user) {
       throw new Error('No authenticated user');
     }
+
+    const previousProfile = profile;
+    const previousCompleted = onboardingCompleted;
+    const previousStep = onboardingStep;
+    const rollback = () => {
+      setProfile(previousProfile);
+      setHasProfile(Boolean(previousProfile));
+      setOnboardingCompleted(previousCompleted);
+      setOnboardingStep(previousStep);
+      localStorage.setItem(
+        `stackswipe_onboarding_${user.id}`,
+        JSON.stringify({ onboarding_completed: previousCompleted, onboarding_step: previousStep })
+      );
+      if (previousProfile) {
+        localStorage.setItem('stackswipe_cached_profile', JSON.stringify(previousProfile));
+      } else {
+        localStorage.removeItem('stackswipe_cached_profile');
+      }
+    };
 
     try {
       const metadata: any = user.user_metadata || {};
@@ -539,67 +573,60 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         localStorage.setItem('stackswipe_cached_profile', JSON.stringify(transformedProfile));
       }
 
-      // 3. Persist to Supabase in a non-hanging, timeout-guarded background operation
-      try {
-        const timeoutPromise = new Promise<{ timeout: true }>((resolve) =>
-          setTimeout(() => resolve({ timeout: true }), 3500)
-        );
+      // 3. Persist to Supabase. Waits briefly so slow networks never hang the UI, but a
+      // save that fails, even after the wait, undoes the optimistic update above.
+      const persist = async () => {
+        const { data: existingUser, error: lookupError } = await supabase
+          .from('users')
+          .select('id')
+          .or(`id.eq.${user.id},firebase_uid.eq.${user.id}`)
+          .maybeSingle();
 
-        const dbOperation = (async () => {
-          let { data: existingUser } = await supabase
-            .from('users')
-            .select('id')
-            .or(`id.eq.${user.id},firebase_uid.eq.${user.id}`)
-            .maybeSingle();
+        if (lookupError) throw lookupError;
 
-          let result: any;
-          if (existingUser) {
-            result = await supabase
-              .from('users')
-              .update(profileData)
-              .eq('id', existingUser.id)
-              .select()
-              .maybeSingle();
-          } else {
-            result = await supabase.from('users').insert(profileData).select().maybeSingle();
-          }
+        const write = (payload: any) =>
+          existingUser
+            ? supabase.from('users').update(payload).eq('id', existingUser.id).select().maybeSingle()
+            : supabase.from('users').insert(payload).select().maybeSingle();
 
-          const missingGuidanceColumn =
-            result?.error &&
-            (result.error.code === 'PGRST204' || result.error.code === '42703') &&
-            GUIDANCE_COLUMNS.some((column) => result?.error?.message?.includes(column));
+        let payload = { ...profileData };
+        let result = await write(payload);
 
-          if (missingGuidanceColumn) {
-            const withoutGuidance = { ...profileData };
-            GUIDANCE_COLUMNS.forEach((column) => delete withoutGuidance[column]);
-            result = existingUser
-              ? await supabase.from('users').update(withoutGuidance).eq('id', existingUser.id).select().maybeSingle()
-              : await supabase.from('users').insert(withoutGuidance).select().maybeSingle();
-          }
+        // These retries keep profiles saving if the database migrations are not applied yet.
+        const missingGuidanceColumn =
+          (result.error?.code === 'PGRST204' || result.error?.code === '42703') &&
+          GUIDANCE_COLUMNS.some((column) => result.error?.message?.includes(column));
 
-          if (
-            result?.error &&
-            (result.error.message?.includes('onboarding_completed') ||
-              result.error.message?.includes('onboarding_step') ||
-              result.error.message?.includes('check constraint'))
-          ) {
-            const fallbackData = { ...profileData };
-            delete fallbackData.onboarding_completed;
-            delete fallbackData.onboarding_step;
-            if (existingUser) {
-              await supabase.from('users').update(fallbackData).eq('id', existingUser.id);
-            } else {
-              await supabase.from('users').insert(fallbackData);
-            }
-          }
-        })();
+        if (missingGuidanceColumn) {
+          GUIDANCE_COLUMNS.forEach((column) => delete payload[column]);
+          result = await write(payload);
+        }
 
-        await Promise.race([dbOperation, timeoutPromise]);
-      } catch (dbErr) {
-        console.warn('Background Supabase profile sync notice:', dbErr);
+        if (result.error?.message?.includes('experience_level')) {
+          console.warn('Experience level rejected by the database. Run supabase/guidance_platform.sql.');
+          payload = { ...payload, experience_level: '' };
+          result = await write(payload);
+        }
+
+        if (result.error) throw result.error;
+        if (!result.data) throw new Error('The profile was not saved.');
+      };
+
+      const saving = persist();
+      const finished = await Promise.race([
+        saving.then(() => true),
+        new Promise<boolean>((resolve) => setTimeout(() => resolve(false), 3500)),
+      ]);
+
+      if (!finished) {
+        saving.catch((error) => {
+          console.error('Profile save failed after the wait:', error);
+          rollback();
+        });
       }
     } catch (error) {
       console.error('Profile update failed:', error);
+      rollback();
       throw error;
     }
   };

@@ -66,6 +66,7 @@ export default function SuperAdminLayout({
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
+  const [databaseAccess, setDatabaseAccess] = useState(true);
 
   // If we are on the login page, don't show the admin dashboard shell
   const isLoginPage = pathname === '/super-admin/login';
@@ -96,6 +97,7 @@ export default function SuperAdminLayout({
 
         const data = await res.json();
         setAdminUser(data.adminUser);
+        setDatabaseAccess(data.databaseAccess !== false);
 
         // Fetch unread notifications count
         try {
@@ -365,7 +367,18 @@ export default function SuperAdminLayout({
 
           {/* PAGE CONTENT */}
           <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
-            <div className="max-w-7xl mx-auto space-y-6">{children}</div>
+            <div className="max-w-7xl mx-auto space-y-6">
+              {!databaseAccess && (
+                <div role="alert" className="border-2 border-amber-500 bg-amber-500/10 p-4 text-sm text-foreground">
+                  <p className="font-semibold">This account can open the admin panel but cannot read admin data yet.</p>
+                  <p className="mt-1">
+                    It is on the SUPER_ADMIN_EMAILS list but has no admin_users row, so reports, users and metrics will look
+                    empty. Run supabase/add_admins.sql in the Supabase SQL Editor with this email included, then reload.
+                  </p>
+                </div>
+              )}
+              {children}
+            </div>
           </main>
         </div>
       </div>

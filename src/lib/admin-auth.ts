@@ -16,6 +16,9 @@ export interface AdminUser {
 export interface AdminSession {
   adminUser: AdminUser;
   token: string;
+  // False when the account is only on the SUPER_ADMIN_EMAILS list. The database decides what
+  // an admin can read from admin_users, so without a row every admin page comes back empty.
+  databaseAccess: boolean;
 }
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -138,6 +141,7 @@ export async function verifyAdminSession(req: NextRequest): Promise<AdminSession
           updated_at: adminRecord.updated_at,
         },
         token,
+        databaseAccess: true,
       };
     }
 
@@ -154,21 +158,26 @@ export async function verifyAdminSession(req: NextRequest): Promise<AdminSession
         is_active: true,
       };
 
-      try {
-        await sbClient.from('admin_users').upsert({
-          id: superAdminUser.id,
-          email: superAdminUser.email,
-          name: superAdminUser.name,
-          role: 'super_admin',
-          is_active: true,
-        });
-      } catch (e) {
-        // Table might not exist yet or permission error
+      // Row Level Security only lets an existing super admin add a row, so this normally
+      // fails for a first admin. They need supabase/add_admins.sql.
+      const { error: upsertError } = await sbClient.from('admin_users').upsert({
+        id: superAdminUser.id,
+        email: superAdminUser.email,
+        name: superAdminUser.name,
+        role: 'super_admin',
+        is_active: true,
+      });
+
+      if (upsertError) {
+        console.error(
+          `Admin ${superAdminUser.email} has no admin_users row, so admin pages will be empty. Run supabase/add_admins.sql.`
+        );
       }
 
       return {
         adminUser: superAdminUser,
         token,
+        databaseAccess: !upsertError,
       };
     }
 

@@ -12,6 +12,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Icons } from '@/components/icons';
+import { supabase } from '@/lib/supabase';
 import {
   Mail,
   Lock,
@@ -73,6 +74,10 @@ export function AuthForm({ initialMode = 'login' }: AuthFormProps) {
   // Loading states
   const [loadingProvider, setLoadingProvider] = useState<'google' | 'github' | 'email' | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // The address waiting on a confirmation email, when the project requires one
+  const [awaitingEmail, setAwaitingEmail] = useState<string | null>(null);
+  const [resendState, setResendState] = useState<'idle' | 'sending' | 'sent'>('idle');
 
   // If already authenticated, redirect to appropriate destination
   useEffect(() => {
@@ -137,11 +142,22 @@ export function AuthForm({ initialMode = 'login' }: AuthFormProps) {
     setLoadingProvider('email');
     try {
       if (mode === 'signup') {
-        await signup(email, password);
-        toast({
-          title: 'Account Created',
-          description: "Welcome to StackSwipe! Let's set up your profile.",
-        });
+        const data = await signup(email.trim(), password);
+
+        if (data.session) {
+          // Signed in straight away, so the effect above moves on to onboarding.
+          toast({
+            title: 'Account created',
+            description: "Welcome to StackSwipe! Let's set up your profile.",
+          });
+        } else if (data.user?.identities?.length === 0) {
+          // Supabase hides whether an address is taken by returning a user with no identities.
+          setMode('login');
+          setErrorMessage('An account with this email already exists. Please sign in instead.');
+        } else {
+          setResendState('idle');
+          setAwaitingEmail(email.trim());
+        }
       } else {
         await login(email, password);
         toast({
@@ -150,12 +166,90 @@ export function AuthForm({ initialMode = 'login' }: AuthFormProps) {
         });
       }
     } catch (err: any) {
+      if (err?.message?.includes('Email not confirmed')) {
+        setResendState('idle');
+        setAwaitingEmail(email.trim());
+        return;
+      }
       console.error('Email authentication error:', err);
       setErrorMessage(formatAuthError(err));
     } finally {
       setLoadingProvider(null);
     }
   };
+
+  const resendConfirmation = async () => {
+    if (!awaitingEmail) return;
+    setErrorMessage(null);
+    setResendState('sending');
+
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
+      email: awaitingEmail,
+      options: { emailRedirectTo: `${window.location.origin}/onboarding` },
+    });
+
+    if (error) {
+      setResendState('idle');
+      setErrorMessage(formatAuthError(error));
+    } else {
+      setResendState('sent');
+    }
+  };
+
+  if (awaitingEmail) {
+    return (
+      <div className="mx-auto w-full max-w-md">
+        <Card className="px-raised bg-card">
+          <CardHeader className="pb-4 text-center">
+            <div className="mb-3 flex justify-center">
+              <Mail className="h-10 w-10" />
+            </div>
+            <CardTitle className="font-headline text-4xl font-bold leading-none sm:text-5xl">
+              Check your email
+            </CardTitle>
+            <CardDescription className="mt-2 text-sm text-muted-foreground">
+              We sent a confirmation link to <span className="font-semibold text-foreground break-all">{awaitingEmail}</span>.
+              Open it to confirm your account, and we&apos;ll take you straight to setting up your profile.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {errorMessage && (
+              <Alert variant="destructive" className="py-2.5">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription className="text-xs font-medium sm:text-sm">{errorMessage}</AlertDescription>
+              </Alert>
+            )}
+            <p className="text-center text-xs text-muted-foreground" aria-live="polite">
+              {resendState === 'sent' ? 'Sent again. It can take a minute to arrive.' : 'Not there? Check your spam folder.'}
+            </p>
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              disabled={resendState !== 'idle'}
+              onClick={resendConfirmation}
+            >
+              {resendState === 'sending' ? 'Sending…' : resendState === 'sent' ? 'Email sent' : 'Resend the email'}
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              className="w-full"
+              onClick={() => {
+                setAwaitingEmail(null);
+                setErrorMessage(null);
+                setMode('login');
+              }}
+            >
+              <ArrowLeft className="mr-1 h-4 w-4" />
+              Back to sign in
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full max-w-md mx-auto">

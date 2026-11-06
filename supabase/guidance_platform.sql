@@ -16,6 +16,10 @@ alter table public.users add column if not exists guidance_wanted text[] default
 alter table public.users add column if not exists conversation_preferences text[] default '{}';
 alter table public.users add column if not exists industry text;
 
+-- Onboarding offers levels like "Just getting started" and a free-text option. The
+-- old list rejected them, which stopped those profiles from saving at all.
+alter table public.users drop constraint if exists users_experience_level_check;
+
 -- New columns can only be added at the end of an existing view.
 create or replace view public.user_profiles as
 select

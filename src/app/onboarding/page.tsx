@@ -412,27 +412,23 @@ export default function OnboardingPage() {
     };
 
     try {
-      localStorage.removeItem(`stackswipe_onboarding_draft_${userId}`);
-      localStorage.setItem(
-        `stackswipe_onboarding_${userId}`,
-        JSON.stringify({ onboarding_completed: true, onboarding_step: FINAL_STEP_INDEX })
-      );
-      localStorage.setItem('stackswipe_cached_profile', JSON.stringify(newProfile));
-
       await updateProfile(newProfile);
+      localStorage.removeItem(`stackswipe_onboarding_draft_${userId}`);
 
       toast({
         title: 'Welcome to StackSwipe!',
         description: 'Your next great conversation could be one swipe away.',
       });
+      goToDashboard();
     } catch (error) {
-      console.warn('Profile completion proceeding with cached profile:', error);
+      // Other people can only find this account once the profile has saved.
+      console.error('Could not finish onboarding:', error);
       toast({
-        title: 'Welcome to StackSwipe!',
-        description: 'Your next great conversation could be one swipe away.',
+        title: 'Your profile did not save',
+        description: 'Your answers are still here. Please check your connection and try again.',
+        variant: 'destructive',
       });
     } finally {
-      goToDashboard();
       setIsSubmitting(false);
     }
   };

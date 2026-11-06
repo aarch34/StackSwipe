@@ -29,11 +29,14 @@ export function AppRouter({ children }: { children: React.ReactNode }) {
 
         const isPublicRoute = publicRoutes.includes(pathname);
         const isAuthRoute = authRoutes.includes(pathname);
-        const isCompleted = Boolean(
-            profile?.onboarding_completed ||
-            onboardingCompleted ||
-            (typeof window !== 'undefined' && user && localStorage.getItem(`stackswipe_onboarding_${user.id}`)?.includes('"onboarding_completed":true'))
-        );
+        // A loaded profile is the source of truth. The browser's copy is only a fallback
+        // for when the profile cannot be read, or it could hide an onboarding that never saved.
+        const isCompleted = profile
+            ? Boolean(profile.onboarding_completed)
+            : Boolean(
+                onboardingCompleted ||
+                (typeof window !== 'undefined' && user && localStorage.getItem(`stackswipe_onboarding_${user.id}`)?.includes('"onboarding_completed":true'))
+            );
 
         if (user) {
             if (isAuthRoute) {
